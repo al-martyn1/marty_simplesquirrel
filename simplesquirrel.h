@@ -487,6 +487,15 @@ ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix, const st
     for(auto p: valNameVec)
     {
         res.append("static ");
+        if (!p.first.empty())
+        {
+            char firstCh = p.first[0];
+            if (firstCh>='0' && firstCh<='9')
+            {
+                res.append("_");
+            }
+        }
+
         res.append(p.first);
         //res.append("<-");
         res.append("=");
@@ -494,15 +503,6 @@ ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix, const st
         {
             res.append(itemTypeString);
             res.append("(");
-        }
-
-        if (!p.first.empty())
-        {
-            char firstCh = !p.first[0];
-            if (firstCh>='0' && firstCh<='9')
-            {
-                res.append(std::to_string("_"));
-            }
         }
 
         res.append(std::to_string(p.second));
