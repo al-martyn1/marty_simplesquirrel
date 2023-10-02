@@ -292,6 +292,10 @@ float fromObjectConvertHelper<float>(ssq::Object &o, const SQChar *paramName)
             }
 
         case ssq::Type::BOOL:
+            {
+                return o.toBool() ? 1.0f : 0.0f;
+            }
+
         case ssq::Type::NULLPTR:
         case ssq::Type::TABLE:
         case ssq::Type::ARRAY:
@@ -359,6 +363,10 @@ int fromObjectConvertHelper<int>(ssq::Object &o, const SQChar *paramName)
             }
 
         case ssq::Type::BOOL:
+            {
+                return o.toBool() ? 1 : 0;
+            }
+
         case ssq::Type::NULLPTR:
         case ssq::Type::TABLE:
         case ssq::Type::ARRAY:
@@ -405,6 +413,10 @@ ssq::sqstring fromObjectConvertHelper<ssq::sqstring>(ssq::Object &o, const SQCha
             return o.toString();
 
         case ssq::Type::BOOL:
+            {
+                return o.toBool() ? _SC("true") : _SC("false");
+            }
+
         case ssq::Type::NULLPTR:
         case ssq::Type::TABLE:
         case ssq::Type::ARRAY:
@@ -423,7 +435,7 @@ ssq::sqstring fromObjectConvertHelper<ssq::sqstring>(ssq::Object &o, const SQCha
         default: {}
     }
 
-    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::STRING), ssq::typeToStr(t));
 
 }
 
@@ -595,6 +607,28 @@ ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix, const st
 
 
 
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+ssq::Table findOrCreateTable(TVM &vm, const std::string &name)
+{
+    try
+    {
+        ssq::Object obj = vm.find(to_sqstring(name).c_str());
+        if (obj.getType()==ssq::Type::TABLE)
+        {
+            return ssq::Table(obj);
+        }
+
+        throw std::runtime_error("marty_simplesquirrel::findOrCreateTable: failed to find or create table");
+
+    }
+    catch (ssq::NotFoundException&)
+    {
+    }
+
+    return vm.addTable(to_sqstring(name).c_str());
+}
 
 //----------------------------------------------------------------------------
 template<typename TVM> inline
