@@ -181,6 +181,77 @@ TargetType fromObjectConvertHelper(ssq::Object &o, const SQChar *paramName)
 
 //----------------------------------------------------------------------------
 template<> inline
+bool fromObjectConvertHelper<bool>(ssq::Object &o, const SQChar *paramName)
+{
+    (void)paramName;
+
+    if (o.isNull() || o.isEmpty())
+    {
+        return false;
+    }
+
+    ssq::Type t = o.getType();
+    switch(t)
+    {
+        case ssq::Type::INTEGER:
+            return o.toInt()!=0;
+
+        case ssq::Type::FLOAT:
+            return ((int)(o.toFloat()+0.5))!=0;
+
+        case ssq::Type::STRING:
+            {
+                auto str = o.toString();
+                try
+                {
+                    return str==_SC("TRUE") || str==_SC("True") || str==_SC("true") 
+                        || str==_SC("YES") || str==_SC("Yes") || str==_SC("yes") || str==_SC("Y") || str==_SC("y")
+                        || str==_SC("1")
+                         ;
+                }
+                catch(const std::invalid_argument &)
+                {
+                    throw ssq::TypeException("invalid argument", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+                }
+                catch(const std::out_of_range &)
+                {
+                    throw ssq::TypeException("out of range", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+                }
+                catch(...)
+                {
+                    throw ssq::TypeException("unknown error", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+                }
+            }
+
+        case ssq::Type::BOOL:
+            {
+                return o.toBool();
+            }
+
+        case ssq::Type::NULLPTR:
+        case ssq::Type::TABLE:
+        case ssq::Type::ARRAY:
+        case ssq::Type::USERDATA:
+        case ssq::Type::CLOSURE:
+        case ssq::Type::NATIVECLOSURE:
+        case ssq::Type::GENERATOR:
+        case ssq::Type::USERPOINTER:
+        case ssq::Type::THREAD:
+        case ssq::Type::FUNCPROTO:
+        case ssq::Type::CLASS:
+        case ssq::Type::INSTANCE:
+        case ssq::Type::WEAKREF:
+        case ssq::Type::OUTER:
+            [[fallthrough]];		
+        default: {}
+    }
+
+    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+
+}
+
+//----------------------------------------------------------------------------
+template<> inline
 float fromObjectConvertHelper<float>(ssq::Object &o, const SQChar *paramName)
 {
     (void)paramName;
