@@ -642,7 +642,7 @@ ssq::Function findFunc(TVM &vm, const std::string &name)
     }
 
     std::vector<std::string>::const_iterator e = names.end();
-    --e; // Оставляем имя функции на сладкое
+    --e; // РћСЃС‚Р°РІР»СЏРµРј РёРјСЏ С„СѓРЅРєС†РёРё РЅР° СЃР»Р°РґРєРѕРµ
 
     ssq::Object obj = vm;
 
