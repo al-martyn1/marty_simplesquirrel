@@ -447,24 +447,32 @@ ssq::sqstring fromObjectConvertHelper<ssq::sqstring>(ssq::Object &o, const SQCha
 // https://learn.microsoft.com/ru-ru/cpp/cpp/ellipses-and-variadic-templates?view=msvc-170
 
 inline
-void makeEnumValuesVectorHelper( std::vector< std::pair<std::string, int> > &vec)
+void makeEnumValuesVectorHelper(std::vector< std::pair<std::string, int> > &vec)
 {
     (void)vec;
+    // (void)flagEnum;
 }
 
 template<typename EnumVal> inline
-void makeEnumValuesVectorHelper( std::vector< std::pair<std::string, int> > &vec, EnumVal val)
+void makeEnumValuesVectorHelper(std::vector< std::pair<std::string, int> > &vec, EnumVal val)
 {
     auto strVal = enum_serialize(val);
-    if (strVal.empty() || strVal=="0")
+
+    if (strVal.empty()) // || strVal=="0"
     {
-        strVal = "None";
+        // strVal = "None";
+        // Если флаговый enum и передали что-то неизвестное, то будет пустая строка
+        // Если enum и получили пустую строку - то вообще-то это что-то странное
+        throw std::runtime_error("Invalid enum/flag value");
     }
+
+    // Значение "0" вообще не трогаем, оно может быть вполне валидным
+
     vec.emplace_back(strVal, (int)val);
 }
 
 template<typename First, typename... EnumVal> inline
-void makeEnumValuesVectorHelper( std::vector< std::pair<std::string, int> > &vec, First first, EnumVal... vals)
+void makeEnumValuesVectorHelper(std::vector< std::pair<std::string, int> > &vec, First first, EnumVal... vals)
 {
     makeEnumValuesVectorHelper(vec, first);
     makeEnumValuesVectorHelper(vec, vals...);
