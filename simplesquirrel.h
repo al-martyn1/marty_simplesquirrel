@@ -246,7 +246,7 @@ bool fromObjectConvertHelper<bool>(ssq::Object &o, const SQChar *paramName)
         default: {}
     }
 
-    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::BOOL), ssq::typeToStr(t));
 
 }
 
@@ -385,7 +385,78 @@ int fromObjectConvertHelper<int>(ssq::Object &o, const SQChar *paramName)
         default: {}
     }
 
-    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::INTEGER), ssq::typeToStr(t));
+
+}
+
+//----------------------------------------------------------------------------
+template<> inline
+unsigned fromObjectConvertHelper<unsigned>(ssq::Object &o, const SQChar *paramName)
+{
+    (void)paramName;
+
+    if (o.isNull() || o.isEmpty())
+    {
+        return 0;
+    }
+
+    ssq::Type t = o.getType();
+    switch(t)
+    {
+        case ssq::Type::INTEGER:
+            return (unsigned)(int)o.toInt();
+
+        case ssq::Type::FLOAT:
+            {
+                float f = o.toFloat();
+                return (unsigned)(int)(f+0.5);
+            }
+
+        case ssq::Type::STRING:
+            {
+                auto str = o.toString();
+                try
+                {
+                    return (unsigned)std::stoi(str);
+                }
+                catch(const std::invalid_argument &)
+                {
+                    throw ssq::TypeException("invalid argument", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+                }
+                catch(const std::out_of_range &)
+                {
+                    throw ssq::TypeException("out of range", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+                }
+                catch(...)
+                {
+                    throw ssq::TypeException("unknown error", ssq::typeToStr(ssq::Type::FLOAT), ssq::typeToStr(t));
+                }
+            }
+
+        case ssq::Type::BOOL:
+            {
+                return o.toBool() ? 1u : 0u;
+            }
+
+        case ssq::Type::NULLPTR:
+        case ssq::Type::TABLE:
+        case ssq::Type::ARRAY:
+        case ssq::Type::USERDATA:
+        case ssq::Type::CLOSURE:
+        case ssq::Type::NATIVECLOSURE:
+        case ssq::Type::GENERATOR:
+        case ssq::Type::USERPOINTER:
+        case ssq::Type::THREAD:
+        case ssq::Type::FUNCPROTO:
+        case ssq::Type::CLASS:
+        case ssq::Type::INSTANCE:
+        case ssq::Type::WEAKREF:
+        case ssq::Type::OUTER:
+            [[fallthrough]];		
+        default: {}
+    }
+
+    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::INTEGER), ssq::typeToStr(t));
 
 }
 
@@ -437,6 +508,90 @@ ssq::sqstring fromObjectConvertHelper<ssq::sqstring>(ssq::Object &o, const SQCha
 
     throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::STRING), ssq::typeToStr(t));
 
+}
+
+//----------------------------------------------------------------------------
+
+
+
+
+//----------------------------------------------------------------------------
+template<typename TargetType, typename BasicType> inline
+std::vector<TargetType> fromArrayObjectToVectorConvertEx(ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
+{
+    (void)paramName;
+
+    if (o.isNull() || o.isEmpty())
+    {
+        return std::vector<TargetType>();
+    }
+
+    std::vector<TargetType> resVec;
+
+    ssq::Type t = o.getType();
+    switch(t)
+    {
+        case ssq::Type::INTEGER:
+        case ssq::Type::FLOAT:
+        case ssq::Type::STRING:
+        case ssq::Type::BOOL:
+            if (allowSingleVal)
+            {
+                resVec.emplace_back((TargetType)fromObjectConvertHelper<BasicType>(o, paramName));
+                return resVec;
+            }
+            break;
+
+        case ssq::Type::ARRAY:
+        {
+            //TODO: !!! Не работает, разобраться. convertRaw() почему-то после первого элемента на втором кидает исключение
+            // TypeException("Failed to pop value from back of the array");
+            // //ssq::Array a = o.toArray();
+            // std::vector<ssq::Object> vObjects = o.toArray().convertRaw();
+            // for(auto obj : vObjects)
+            // {
+            //     resVec.emplace_back((TargetType)fromObjectConvertHelper<BasicType>(obj, paramName));
+            // }
+
+            ssq::Array a     = o.toArray();
+            std::size_t size = a.size();
+    
+            for(std::size_t i=0; i!=size; ++i)
+            {
+                // DrawingCoords drawingCoords = a.get<DrawingCoords>(i);
+
+                auto obj = a.get<ssq::Object>(i);
+                resVec.emplace_back((TargetType)fromObjectConvertHelper<BasicType>(obj, paramName));
+            }
+
+            return resVec;
+        }
+
+        case ssq::Type::NULLPTR:
+        case ssq::Type::TABLE:
+        case ssq::Type::USERDATA:
+        case ssq::Type::CLOSURE:
+        case ssq::Type::NATIVECLOSURE:
+        case ssq::Type::GENERATOR:
+        case ssq::Type::USERPOINTER:
+        case ssq::Type::THREAD:
+        case ssq::Type::FUNCPROTO:
+        case ssq::Type::CLASS:
+        case ssq::Type::INSTANCE:
+        case ssq::Type::WEAKREF:
+        case ssq::Type::OUTER:
+            [[fallthrough]];		
+        default: {}
+    }
+
+    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::STRING), ssq::typeToStr(t));
+}
+
+//----------------------------------------------------------------------------
+template<typename TargetType> inline
+std::vector<TargetType> fromArrayObjectToVectorConvertEx(ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
+{
+    fromArrayObjectToVectorConvertEx<TargetType, TargetType>(ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
 }
 
 //----------------------------------------------------------------------------
