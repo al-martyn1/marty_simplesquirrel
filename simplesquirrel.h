@@ -537,7 +537,7 @@ std::vector<TargetType> fromArrayObjectToVectorConvertEx(ssq::Object &o, const S
         case ssq::Type::BOOL:
             if (allowSingleVal)
             {
-                resVec.emplace_back((TargetType)fromObjectConvertHelper<BasicType>(o, paramName));
+                resVec.emplace_back(TargetType(fromObjectConvertHelper<BasicType>(o, paramName)));
                 return resVec;
             }
             break;
@@ -561,7 +561,7 @@ std::vector<TargetType> fromArrayObjectToVectorConvertEx(ssq::Object &o, const S
                 // DrawingCoords drawingCoords = a.get<DrawingCoords>(i);
 
                 auto obj = a.get<ssq::Object>(i);
-                resVec.emplace_back((TargetType)fromObjectConvertHelper<BasicType>(obj, paramName));
+                resVec.emplace_back(TargetType(fromObjectConvertHelper<BasicType>(obj, paramName)));
             }
 
             return resVec;
@@ -589,13 +589,83 @@ std::vector<TargetType> fromArrayObjectToVectorConvertEx(ssq::Object &o, const S
 
 //----------------------------------------------------------------------------
 template<typename TargetType> inline
-std::vector<TargetType> fromArrayObjectToVectorConvertEx(ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
+std::vector<TargetType> fromArrayObjectToVectorConvert(ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
 {
-    fromArrayObjectToVectorConvertEx<TargetType, TargetType>(ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
+    return fromArrayObjectToVectorConvertEx<TargetType, TargetType>(o, paramName, allowSingleVal);
 }
 
 //----------------------------------------------------------------------------
 
+
+
+
+//----------------------------------------------------------------------------
+template<typename TargetClassType, typename BoundClassType>
+std::vector<TargetClassType> fromArrayObjectToClassVectorConvertEx(ssq::Object &o, const SQChar *paramName)
+{
+    (void)paramName;
+
+    std::vector<TargetClassType>  resVec;
+
+    if (o.isNull() || o.isEmpty())
+    {
+        return resVec;
+    }
+
+    ssq::Type t = o.getType();
+    switch(t)
+    {
+        case ssq::Type::ARRAY:
+        {
+            ssq::Array a     = o.toArray();
+            std::size_t size = a.size();
+    
+            for(std::size_t i=0; i!=size; ++i)
+            {
+                auto obj = a.get<ssq::Object>(i);
+                ssq::Type ot = obj.getType();
+                if (ot!=ssq::Type::INSTANCE)
+                {
+                    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::ARRAY), ssq::typeToStr(t));
+                }
+
+                BoundClassType bcVal = obj.to<BoundClassType>();
+                resVec.emplace_back(TargetClassType(bcVal));
+            }
+
+            return resVec;
+        }
+
+        case ssq::Type::INTEGER:
+        case ssq::Type::FLOAT:
+        case ssq::Type::STRING:
+        case ssq::Type::BOOL:
+        case ssq::Type::NULLPTR:
+        case ssq::Type::TABLE:
+        case ssq::Type::USERDATA:
+        case ssq::Type::CLOSURE:
+        case ssq::Type::NATIVECLOSURE:
+        case ssq::Type::GENERATOR:
+        case ssq::Type::USERPOINTER:
+        case ssq::Type::THREAD:
+        case ssq::Type::FUNCPROTO:
+        case ssq::Type::CLASS:
+        case ssq::Type::INSTANCE:
+        case ssq::Type::WEAKREF:
+        case ssq::Type::OUTER:
+            [[fallthrough]];		
+        default: {}
+    }
+
+    throw ssq::TypeException("bad cast", ssq::typeToStr(ssq::Type::ARRAY), ssq::typeToStr(t));
+}
+
+//----------------------------------------------------------------------------
+template<typename BoundClassType>
+std::vector<BoundClassType> fromArrayObjectToClassVectorConvert(ssq::Object &o, const SQChar *paramName)
+{
+    return fromArrayObjectToClassVectorConvertEx<BoundClassType,BoundClassType>(o, paramName) const
+}
 
 
 //----------------------------------------------------------------------------
