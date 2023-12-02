@@ -1,8 +1,10 @@
 #pragma once
 
 #include <simplesquirrel/simplesquirrel.hpp>
-
+//
 #include "marty_cpp/marty_cpp.h"
+//
+#include "umba/filename.h"
 
 //
 #include <exception>
@@ -951,6 +953,41 @@ std::optional<ssq::Function> findFuncOptional(TVM &vm, const std::string &name)
          return std::nullopt;
     }
 }
+
+//----------------------------------------------------------------------------
+template<typename StringType> inline
+StringType minimizeDislayedFilenameWithEllipsis(StringType fn, std::size_t sz=42 /* универсальное число для всей вселенной */ )
+{
+    fn = umba::filename::normalizePathSeparators( fn, (typename StringType::value_type)'/' );
+
+    namespace ustrp = umba::string_plus;
+
+    std::vector<StringType> parts = ustrp::split(fileName, pathSep, true /* skipEmpty */ );
+
+    std::vector<StringType>::const_iterator bit = parts.begin();
+
+    std::vector< StringType > resParts;
+
+    // Добавляем начало из N элементов - без компромиссов (пока N=1)
+    for(std::size_t i=0; i!=1 && bit!=parts.end(); ++i, ++bit)
+    {
+        resParts.emplace_back(*bit);
+    }
+
+    std::vector< StringType > backParts;
+
+    // Добавляем хвост из двух элементов - без компромиссов
+    std::vector<StringType>::const_reverse_iterator rBegin = parts.rbegin();
+    for(std::size_t i=0; i!=2; ++rBegin)
+    {
+        std::vector<StringType>::const_iterator bit = parts.begin();
+    }
+
+    // Блджад, я лопух, в белкином исключении имя файла входит в what(), отдельно не предоставляется (вроде бы)
+
+    return fn;
+}
+
 
 // //Object find(const SQChar* name) const;
 //  
