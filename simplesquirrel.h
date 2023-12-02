@@ -7,6 +7,8 @@
 //
 #include <exception>
 #include <stdexcept>
+#include <optional>
+
 
 // marty_simplesquirrel::
 
@@ -864,10 +866,44 @@ ssq::Table findOrCreateTable(TVM &vm, const std::string &name)
 }
 
 //----------------------------------------------------------------------------
+inline
+std::string prepareFunctionFullQualifiedName(const std::string &name)
+{
+    // В squirrel полностью квалифицированное имя функции разделяется как и в плюсиках, через двойное двоеточие, но это неудобно
+    // В именах не допустим символ '/', поэтому, раз пошла такая пьянка, то добавим возможность задавать FQNs как пути в юниксах
+    std::string res;
+    bool prevColon = false;
+
+    for(auto ch: name)
+    {
+        if (ch==':' || ch=='/')
+        {
+            if (prevColon)
+            {
+                // ничего делать не надо
+            }
+            else
+            {
+                res.append(1,'.');
+                prevColon = true;
+            }
+        }
+        else
+        {
+            res.append(1,ch);
+            prevColon = false;
+        }
+    }
+
+    return res;
+}
+
+//----------------------------------------------------------------------------
 template<typename TVM> inline
 ssq::Function findFunc(TVM &vm, const std::string &name)
 {
-    std::vector<std::string> names = marty_cpp::simple_string_split(name, '.' /* , -1 */  /* nSplits */ );
+    auto preparedFqn = prepareFunctionFullQualifiedName(name);
+    std::vector<std::string> names = marty_cpp::simple_string_split(preparedFqn, '.' /* , -1 */  /* nSplits */ );
 
     if (names.empty())
     {
@@ -900,6 +936,20 @@ ssq::Function findFunc(TVM &vm, const std::string &name)
 
     return t.findFunc(to_sqstring(*e).c_str());
 
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+std::optional<ssq::Function> findFuncOptional(TVM &vm, const std::string &name)
+{
+    try
+    {
+        return std::optional<ssq::Function>(std::in_place, findFunc(vm, name));
+    }
+    catch(ssq::NotFoundException)
+    {
+         return std::nullopt;
+    }
 }
 
 // //Object find(const SQChar* name) const;
