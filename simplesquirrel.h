@@ -860,7 +860,7 @@ ssq::Table findOrCreateTable(TVM &vm, const std::string &name)
         throw std::runtime_error("marty_simplesquirrel::findOrCreateTable: failed to find or create table");
 
     }
-    catch (ssq::NotFoundException&)
+    catch (const ssq::NotFoundException&)
     {
     }
 
@@ -1057,7 +1057,11 @@ std::optional<ssq::Function> findFuncOptionalEx(TVM &vm, const ssq::sqstring &na
     {
         return std::optional<ssq::Function>(std::in_place, findFuncEx(vm, name, objFound));
     }
-    catch(ssq::NotFoundException)
+    catch(const ssq::NotFoundException &) // это производное от std::exception исключение, ловим первым
+    {
+         return std::nullopt;
+    }
+    catch(const std::runtime_error &)
     {
          return std::nullopt;
     }
@@ -1071,7 +1075,11 @@ std::optional<ssq::Function> findFuncOptional(TVM &vm, const ssq::sqstring &name
     {
         return std::optional<ssq::Function>(std::in_place, findFunc(vm, name));
     }
-    catch(ssq::NotFoundException)
+    catch(const ssq::NotFoundException &) // это производное от std::exception исключение, ловим первым
+    {
+         return std::nullopt;
+    }
+    catch(const std::runtime_error &)
     {
          return std::nullopt;
     }
