@@ -869,16 +869,18 @@ ssq::Table findOrCreateTable(TVM &vm, const std::string &name)
 
 //----------------------------------------------------------------------------
 inline
-std::string prepareFunctionFullQualifiedName(const std::string &name)
+ssq::sqstring prepareFunctionFullQualifiedName(const ssq::sqstring &name)
 {
+    typedef ssq::sqstring::value_type CharType;
     // В squirrel полностью квалифицированное имя функции разделяется как и в плюсиках, через двойное двоеточие, но это неудобно
+    // А иногда через точку, там хз как
     // В именах не допустим символ '/', поэтому, раз пошла такая пьянка, то добавим возможность задавать FQNs как пути в юниксах
-    std::string res;
+    ssq::sqstring res;
     bool prevColon = false;
 
-    for(auto ch: name)
+    for(const auto ch: name)
     {
-        if (ch==':' || ch=='/')
+        if (ch==(CharType)':' || ch==(CharType)'/')
         {
             if (prevColon)
             {
@@ -886,13 +888,13 @@ std::string prepareFunctionFullQualifiedName(const std::string &name)
             }
             else
             {
-                res.append(1,'.');
+                res.append(1,(CharType)'.');
                 prevColon = true;
             }
         }
         else
         {
-            res.append(1,ch);
+            res.append(1, (CharType)ch);
             prevColon = false;
         }
     }
@@ -901,48 +903,169 @@ std::string prepareFunctionFullQualifiedName(const std::string &name)
 }
 
 //----------------------------------------------------------------------------
-template<typename TVM> inline
-ssq::Function findFunc(TVM &vm, const std::string &name)
+template<typename TObject, typename IterType > inline
+bool findObjectByFullQualifiedName(TObject &rootObj, IterType b, IterType e, ssq::Object &objOut)
 {
-    auto preparedFqn = prepareFunctionFullQualifiedName(name);
-    std::vector<std::string> names = marty_cpp::simple_string_split(preparedFqn, '.' /* , -1 */  /* nSplits */ );
+    ssq::Object obj = rootObj;
 
-    if (names.empty())
+    for(; b!=e; ++b)
+    {
+        if (b->empty())
+        {
+            // Просто пропускаем пустые имена
+            continue;
+        }
+
+        try
+        {
+            ssq::Object objNext = obj.find(to_sqstring(*b).c_str());
+            if (objNext.isNull())
+            {
+                // throw std::runtime_error("marty_simplesquirrel::findObjectByFullQualifiedName: object not found");
+                return false;
+            }
+    
+            obj = objNext;
+        }
+        catch(...)
+        {
+            return false;
+        }
+    }
+
+    objOut = obj;
+
+    return true;
+}
+
+
+//----------------------------------------------------------------------------
+template<typename TObject> inline
+bool findObjectByFullQualifiedName(TObject &rootObj, const ssq::sqstring &name, ssq::Object &objFound)
+{
+    typedef ssq::sqstring::value_type CharType;
+
+    auto preparedFqn = prepareFunctionFullQualifiedName(name);
+
+    std::vector<ssq::sqstring> names = marty_cpp::simple_string_split(preparedFqn, (CharType)'.' /* , -1 */  /* nSplits */ );
+    if (names.empty() || (names.size()==1 && names[0].empty())) //TODO: !!! Bug workaround, bug is need to be fixed
+    {
+        objFound = rootObj;
+        return true;
+    }
+
+    return findObjectByFullQualifiedName(rootObj, names.cbegin(), names.cend(), objFound);
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+ssq::Function findFuncEx(TVM &vm, const ssq::sqstring &name, ssq::Object &objFound)
+{
+    typedef ssq::sqstring::value_type CharType;
+
+    auto preparedFqn = prepareFunctionFullQualifiedName(name);
+    std::vector<ssq::sqstring> names = marty_cpp::simple_string_split(preparedFqn, (CharType)'.' /* , -1 */  /* nSplits */ );
+
+    // if (names.empty() || (names.size()==1 && names[1].empty()))
+    if (names.empty() || names.back().empty()) //TODO: !!! Bug workaround, bug is need to be fixed
     {
         throw std::runtime_error("marty_simplesquirrel::findFunc: invalid function name");
     }
 
-    std::vector<std::string>::const_iterator e = names.end();
+    std::vector<ssq::sqstring>::const_iterator e = names.end();
     --e; // Оставляем имя функции на сладкое
 
-    ssq::Object obj = vm;
 
-    std::vector<std::string>::const_iterator it = names.begin();
-    for(; it!=e; ++it)
+    if (!findObjectByFullQualifiedName(vm, names.cbegin(), e, objFound))
     {
-        ssq::Object objNext = obj.find(to_sqstring(*it).c_str());
-        if (objNext.isNull())
-        {
-            throw std::runtime_error("marty_simplesquirrel::findFunc: table not found");
-        }
-
-        if (objNext.getType()!=ssq::Type::TABLE)
-        {
-            throw std::runtime_error("marty_simplesquirrel::findFunc: found object is not a table");
-        }
-
-        obj = objNext;
+        throw std::runtime_error("marty_simplesquirrel::findFunc: table not found");
     }
 
-    ssq::Table t = ssq::Table(obj);
+    // if (objFound.getType()!=ssq::Type::TABLE && objFound.getType()!=ssq::Type::INSTANCE)
+    // {
+    //     throw std::runtime_error("marty_simplesquirrel::findFunc: found object is not a table or instance");
+    // }
 
-    return t.findFunc(to_sqstring(*e).c_str());
+    // ssq::Object obj = vm;
+    //  
+    // std::vector<std::string>::const_iterator it = names.begin();
+    // for(; it!=e; ++it)
+    // {
+    //     ssq::Object objNext = obj.find(to_sqstring(*it).c_str());
+    //     if (objNext.isNull())
+    //     {
+    //         throw std::runtime_error("marty_simplesquirrel::findFunc: table not found");
+    //     }
+    //  
+    //     if (objNext.getType()!=ssq::Type::TABLE)
+    //     {
+    //         throw std::runtime_error("marty_simplesquirrel::findFunc: found object is not a table");
+    //     }
+    //  
+    //     obj = objNext;
+    // }
+
+    // Валидно для
+    // include\simplesquirrel\class.hpp
+    // include\simplesquirrel\table.hpp
+    // include\simplesquirrel\vm.hpp
+
+    auto funcName = to_sqstring(*e);
+
+    if (objFound.getType()==ssq::Type::TABLE)
+    {
+        ssq::Table t = ssq::Table(objFound);
+        return t.findFunc(funcName.c_str());
+    }
+    else if (objFound.getType()==ssq::Type::INSTANCE)
+    {
+        //ssq::Table t = ssq::Table(objFound);
+        //return t.findFunc(to_sqstring(*e).c_str());
+
+    // Function Table::findFunc(const SQChar* name) const {
+    //     Object object = Object::find(name);
+    //     return Function(object);
+    // }
+
+    // Function Class::findFunc(const SQChar* name) const {
+    //     Object object = Object::find(name);
+    //     return Function(object);
+    // }
+
+        ssq::Object funcObject = objFound.find(funcName.c_str());
+        return ssq::Function(funcObject);
+
+    }
+
+    throw std::runtime_error("marty_simplesquirrel::findFunc: found object is not a table or instance");
 
 }
 
 //----------------------------------------------------------------------------
 template<typename TVM> inline
-std::optional<ssq::Function> findFuncOptional(TVM &vm, const std::string &name)
+ssq::Function findFunc(TVM &vm, const ssq::sqstring &name)
+{
+    ssq::Object objFound;
+    return findFuncEx(vm, name, objFound);
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+std::optional<ssq::Function> findFuncOptionalEx(TVM &vm, const ssq::sqstring &name, ssq::Object &objFound)
+{
+    try
+    {
+        return std::optional<ssq::Function>(std::in_place, findFuncEx(vm, name, objFound));
+    }
+    catch(ssq::NotFoundException)
+    {
+         return std::nullopt;
+    }
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+std::optional<ssq::Function> findFuncOptional(TVM &vm, const ssq::sqstring &name)
 {
     try
     {
