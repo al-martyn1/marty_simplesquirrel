@@ -2,6 +2,8 @@
 
 
 #include "simplesquirrel.h"
+//
+#include "squirrel_interface.h"
 
 #include <utility>
 
@@ -51,8 +53,9 @@ struct LoadedScripts
 
 struct VmWithScripts
 {
-    ssq::VM           vm           ;
-    LoadedScripts     loadedScripts;
+    ssq::VM                    vm           ;
+    std::vector<ScriptInfo>    scripts      ; // Пусть лежит тут на всякий случай
+    LoadedScripts              loadedScripts;
 
     VmWithScripts() : vm(1024, 0), loadedScripts() {}
     VmWithScripts(const VmWithScripts &) = delete;
@@ -64,6 +67,7 @@ struct VmWithScripts
                  , const std::vector<ScriptInfo> &scriptInfos
                  )
     : vm(stackSize, flags)
+    , scripts(scriptInfos)
     , loadedScripts()
     {
         loadedScripts = LoadedScripts::load(vm, scriptInfos);
@@ -75,12 +79,24 @@ struct VmWithScripts
                  , VmInitProc vmInitProc
                  )
     : vm(stackSize, flags)
+    , scripts(scriptInfos)
     , loadedScripts()
     {
         vmInitProc(vm);
         loadedScripts = LoadedScripts::load(vm, scriptInfos);
     }
 
+    template<typename InterfaceClassType>
+    InterfaceClassType extractGlobalInterface() const
+    {
+        return InterfaceClassType::extract(vm);
+    }
+
+    template<typename InterfaceClassType>
+    InterfaceClassType extractObjectInterface(const ssq::Object &o) const
+    {
+        return InterfaceClassType::extract(vm, o);
+    }
 
 
 }; // struct VmWithScripts

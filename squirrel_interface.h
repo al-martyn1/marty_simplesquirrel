@@ -44,14 +44,11 @@ struct SquirrelInterfaceBase
     SquirrelInterfaceBase(SquirrelInterfaceBase &&) = default;
     SquirrelInterfaceBase& operator=(SquirrelInterfaceBase &&) = default;
 
-
-    template<typename InterfaceType> 
-    static
-    void getFromSquirrelObjectImpl(ssq::VM &vm, InterfaceType &&iface, ssq::Object &obj, const std::vector<SquirrelClosure*> &closures)
-    //void getFromSquirrelObjectImpl(ssq::Object &obj, IterType b, IterType e)
+    void getClosures(const ssq::VM &vm, const ssq::Object &obj, const std::vector<SquirrelClosure*> &closures) const
+    //void getClosures(ssq::Object &obj, IterType b, IterType e)
     {
         ssq::Object objFound;
-        if (!marty_simplesquirrel::findObjectByFullQualifiedName(obj, iface.name, objFound))
+        if (!marty_simplesquirrel::findObjectByFullQualifiedName(obj, name, objFound))
         {
             // Пока кинем так
             throw std::bad_optional_access( /* "Failed to extract '" + encoding::toUtf8(iface.name) + "' squirrel interface" */ );

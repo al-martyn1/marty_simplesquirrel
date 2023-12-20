@@ -42,12 +42,12 @@ public:
 
     //static
     //SquirrelClosure getFromSquirrelObject(const SquirrelClosure &closure, ssq::Object &obj)
-    SquirrelClosure getFromSquirrelObject(ssq::VM &vm, ssq::Object &obj) const
+    SquirrelClosure getFromSquirrelObject(const ssq::VM &vm, const ssq::Object &obj) const
     {
         SquirrelClosure boundClosure = SquirrelClosure(name);
         //boundClosure.optVm           = std::optional<ssq::VM>(std::in_place, vm);
         //boundClosure.optVm           = std::make_optional<ssq::VM>(vm);
-        boundClosure.pVm             = &vm;
+        boundClosure.pVm             = const_cast<ssq::VM*>(&vm);
         boundClosure.optClosure      = marty_simplesquirrel::findFuncOptionalEx(obj, name, boundClosure.ssqThis);
         return boundClosure;
     }
