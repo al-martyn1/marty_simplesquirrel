@@ -10,6 +10,8 @@
 #include <exception>
 #include <stdexcept>
 #include <optional>
+#include <type_traits>
+
 
 
 // marty_simplesquirrel::
@@ -178,14 +180,14 @@ struct CToWide
 
 //----------------------------------------------------------------------------
 template<typename TargetType> inline
-TargetType fromObjectConvertHelper(ssq::Object &o, const SQChar *paramName)
+TargetType fromObjectConvertHelper(const ssq::Object &o, const SQChar *paramName)
 {
     MARTY_DC_BIND_SQUIRREL_ASSERT_FAIL(); // not implemented for generic type
 }
 
 //----------------------------------------------------------------------------
 template<> inline
-bool fromObjectConvertHelper<bool>(ssq::Object &o, const SQChar *paramName)
+bool fromObjectConvertHelper<bool>(const ssq::Object &o, const SQChar *paramName)
 {
     (void)paramName;
 
@@ -256,7 +258,7 @@ bool fromObjectConvertHelper<bool>(ssq::Object &o, const SQChar *paramName)
 
 //----------------------------------------------------------------------------
 template<> inline
-float fromObjectConvertHelper<float>(ssq::Object &o, const SQChar *paramName)
+float fromObjectConvertHelper<float>(const ssq::Object &o, const SQChar *paramName)
 {
     (void)paramName;
 
@@ -324,7 +326,7 @@ float fromObjectConvertHelper<float>(ssq::Object &o, const SQChar *paramName)
 
 //----------------------------------------------------------------------------
 template<> inline
-int fromObjectConvertHelper<int>(ssq::Object &o, const SQChar *paramName)
+int fromObjectConvertHelper<int>(const ssq::Object &o, const SQChar *paramName)
 {
     (void)paramName;
 
@@ -395,7 +397,7 @@ int fromObjectConvertHelper<int>(ssq::Object &o, const SQChar *paramName)
 
 //----------------------------------------------------------------------------
 template<> inline
-unsigned fromObjectConvertHelper<unsigned>(ssq::Object &o, const SQChar *paramName)
+unsigned fromObjectConvertHelper<unsigned>(const ssq::Object &o, const SQChar *paramName)
 {
     (void)paramName;
 
@@ -466,7 +468,7 @@ unsigned fromObjectConvertHelper<unsigned>(ssq::Object &o, const SQChar *paramNa
 
 //----------------------------------------------------------------------------
 template<> inline
-ssq::sqstring fromObjectConvertHelper<ssq::sqstring>(ssq::Object &o, const SQChar *paramName)
+ssq::sqstring fromObjectConvertHelper<ssq::sqstring>(const ssq::Object &o, const SQChar *paramName)
 {
     (void)paramName;
 
@@ -521,7 +523,7 @@ ssq::sqstring fromObjectConvertHelper<ssq::sqstring>(ssq::Object &o, const SQCha
 
 //----------------------------------------------------------------------------
 template<typename TargetType, typename BasicType> inline
-std::vector<TargetType> fromArrayObjectToVectorConvertEx(ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
+std::vector<TargetType> fromArrayObjectToVectorConvertEx(const ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
 {
     (void)paramName;
 
@@ -593,7 +595,7 @@ std::vector<TargetType> fromArrayObjectToVectorConvertEx(ssq::Object &o, const S
 
 //----------------------------------------------------------------------------
 template<typename TargetType> inline
-std::vector<TargetType> fromArrayObjectToVectorConvert(ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
+std::vector<TargetType> fromArrayObjectToVectorConvert(const ssq::Object &o, const SQChar *paramName, bool allowSingleVal=false)
 {
     return fromArrayObjectToVectorConvertEx<TargetType, TargetType>(o, paramName, allowSingleVal);
 }
@@ -605,7 +607,7 @@ std::vector<TargetType> fromArrayObjectToVectorConvert(ssq::Object &o, const SQC
 
 //----------------------------------------------------------------------------
 template<typename TargetClassType, typename BoundClassType>
-std::vector<TargetClassType> fromArrayObjectToClassVectorConvertEx(ssq::Object &o, const SQChar *paramName)
+std::vector<TargetClassType> fromArrayObjectToClassVectorConvertEx(const ssq::Object &o, const SQChar *paramName)
 {
     (void)paramName;
 
@@ -666,7 +668,7 @@ std::vector<TargetClassType> fromArrayObjectToClassVectorConvertEx(ssq::Object &
 
 //----------------------------------------------------------------------------
 template<typename BoundClassType>
-std::vector<BoundClassType> fromArrayObjectToClassVectorConvert(ssq::Object &o, const SQChar *paramName)
+std::vector<BoundClassType> fromArrayObjectToClassVectorConvert(const ssq::Object &o, const SQChar *paramName)
 {
     return fromArrayObjectToClassVectorConvertEx<BoundClassType,BoundClassType>(o, paramName) const
 }
@@ -1119,14 +1121,90 @@ StringType minimizeDislayedFilenameWithEllipsis(StringType fn, std::size_t sz=42
     return fn;
 }
 
-
-// //Object find(const SQChar* name) const;
-//  
-// inline std::string to_sqstring(const CharType* pStr)
-// vm.findFunc(_SC("onPaint"));
-// Function findFunc(const SQChar* name) const;
+//----------------------------------------------------------------------------
 
 
+
+
+//----------------------------------------------------------------------------
+// Булев
+template<typename CastTargetType>
+std::enable_if_t<std::is_same<CastTargetType, bool>::value, CastTargetType>
+objectSimpleCast(const ssq::Object &o)
+{
+    return fromObjectConvertHelper<bool>(o, _SC("result")); // usualy used for result conversion
+}
+
+//------------------------------
+// Целые типы
+template<typename CastTargetType>
+std::enable_if_t<std::is_integral<CastTargetType>::value, CastTargetType>
+objectSimpleCast(const ssq::Object &o)
+{
+    if constexpr(std::is_signed<CastTargetType>::value)
+    {
+        return (CastTargetType)fromObjectConvertHelper<int>(o, _SC("result")); // usualy used for result conversion
+    }
+    else
+    {
+        return (CastTargetType)fromObjectConvertHelper<unsigned>(o, _SC("result")); // usualy used for result conversion
+    }
+}
+
+//------------------------------
+// Плавучка
+template<typename CastTargetType>
+std::enable_if_t<std::is_floating_point<CastTargetType>::value, CastTargetType>
+objectSimpleCast(const ssq::Object &o)
+{
+    float f = fromObjectConvertHelper<float>(o, _SC("result")); // usualy used for result conversion
+    return (CastTargetType)f;
+}
+
+//------------------------------
+// Строки
+template<typename CastTargetType>
+std::enable_if_t<std::is_same<CastTargetType, ssq::sqstring>::value, CastTargetType>
+objectSimpleCast(const ssq::Object &o)
+{
+    return fromObjectConvertHelper<ssq::sqstring>(o, _SC("result")); // usualy used for result conversion
+}
+
+//------------------------------
+// Перечисления
+template<typename CastTargetType>
+std::enable_if_t<std::is_enum<CastTargetType>::value, CastTargetType>
+objectSimpleCast(const ssq::Object &o)
+{
+    underlying_type<T>::type u = fromObjectConvertHelper< std::underlying_type<CastTargetType>::type >(o, _SC("result")); // usualy used for result conversion
+    return (CastTargetType)u;
+}
+
+//----------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------
+template<typename CastTargetType>
+CastTargetType objectSafeSimpleCast(const ssq::Object &o, CastTargetType defVal)
+{
+    try
+    {
+        return objectSimpleCast<CastTargetType>(o);
+    }
+    catch(...)
+    {
+        return defVal;
+    }
+}
+
+//----------------------------------------------------------------------------
+
+
+
+
+//----------------------------------------------------------------------------
 
 } // namespace marty_simplesquirrel
+
 
