@@ -1176,7 +1176,9 @@ template<typename CastTargetType>
 std::enable_if_t<std::is_enum<CastTargetType>::value, CastTargetType>
 objectSimpleCast(const ssq::Object &o)
 {
-    underlying_type<T>::type u = fromObjectConvertHelper< std::underlying_type<CastTargetType>::type >(o, _SC("result")); // usualy used for result conversion
+    typedef typename std::underlying_type<CastTargetType>::type CastTargetUnderlyingType;
+    //std::underlying_type<CastTargetType>::type u = fromObjectConvertHelper< std::underlying_type<CastTargetType>::type >(o, _SC("result")); // usualy used for result conversion
+    CastTargetUnderlyingType u =  objectSimpleCast<CastTargetUnderlyingType>(o);
     return (CastTargetType)u;
 }
 
