@@ -25,10 +25,25 @@ protected:
     //std::optional<ssq::VM>         optVm  ;
     //ssq::VM                        vm     ;
 
-    ssq::VM                       *pVm;
+    ssq::VM                       *pVm = 0;
+
+    // template<typename ObjType>
+    // void resetObject(ObjType &rst)
+    // {
+    //     ObjType cleanObj;
+    //  
+    // }
 
 
 public:
+
+    void swap(SquirrelClosure &other)
+    {
+        std::swap(name       , other.name);
+        std::swap(optClosure , other.optClosure);
+        std::swap(ssqThis    , other.ssqThis);
+        std::swap(pVm        , other.pVm);
+    }
 
     SquirrelClosure() = delete;
     // SquirrelClosure(const ssq::sqstring &n) : name(n), optClosure(std::nullopt), ssqThis(), optVm(std::nullopt) {}
@@ -37,8 +52,20 @@ public:
     SquirrelClosure(const SquirrelClosure &) = delete;
     SquirrelClosure& operator=(const SquirrelClosure &) = delete;
 
-    SquirrelClosure(SquirrelClosure &&) = default;
-    SquirrelClosure& operator=(SquirrelClosure &&) = default;
+    // SquirrelClosure(SquirrelClosure &&) = default;
+    // SquirrelClosure& operator=(SquirrelClosure &&) = default;
+
+    SquirrelClosure(SquirrelClosure &&other)
+    {
+        swap(other);
+        //reset();
+    }
+
+    SquirrelClosure& operator=(SquirrelClosure &&other)
+    {
+        swap(other);
+        return *this;
+    }
 
     //static
     //SquirrelClosure getFromSquirrelObject(const SquirrelClosure &closure, ssq::Object &obj)
