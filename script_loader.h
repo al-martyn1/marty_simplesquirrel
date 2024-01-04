@@ -40,6 +40,11 @@ struct LoadedScripts
     LoadedScripts(LoadedScripts &&) = default;
     LoadedScripts& operator=(LoadedScripts &&) = default;
 
+    void clear()
+    {
+        scripts.clear();
+    }
+
     void loadMoreScripts(ssq::VM &vm, const std::vector<ScriptInfo> &scriptInfos)
     {
         std::size_t sz = scripts.size();
@@ -85,6 +90,14 @@ struct VmWithScripts
     VmWithScripts& operator=(VmWithScripts &&) = default;
 
     //------------------------------
+    void clear()
+    {
+        loadedScripts.clear();
+        scripts.clear();
+        vm.destroy();
+    }
+
+
     VmWithScripts( size_t stackSize, ssq::Libs::Flag flags
                  , const std::vector<ScriptInfo> &scriptInfos
                  )
