@@ -327,12 +327,14 @@ ssq::Table parseJsonTextToSqurrel(HSQUIRRELVM hVm, const std::string &jsonStr, c
     {
         resTable.set(_SC("status" ), int(0x0B)); // invalidFormat
         resTable.set(_SC("message"), toSqStringFromUtf8(e.what()));
+        umba::gmesg(e.what());
         return resTable;
     }
     catch(...)
     {
         resTable.set(_SC("status" ), int(0x01)); // genericError
-        resTable.set(_SC("message"), toSqStringFromUtf8("Unknown error"));
+        resTable.set(_SC("message"), toSqStringFromUtf8("Unknown JSON parsing error"));
+        umba::gmesg("Unknown JSON parsing error");
         return resTable;
     }
 
