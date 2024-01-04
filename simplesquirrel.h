@@ -5,6 +5,7 @@
 #include "marty_cpp/marty_cpp.h"
 //
 #include "umba/filename.h"
+#include "umba/utf8.h"
 
 //
 #include <exception>
@@ -158,6 +159,32 @@ struct CToWide
         return to_ascii(str);
     }
 
+
+    inline
+    std::string toSqStringFromUtf8(const std::string &str)
+    {
+        return str;
+    }
+
+    inline
+    std::string toSqStringFromUtf8(const char *pStr)
+    {
+        return pStr ? std::string() : std::string(pStr);
+    }
+
+    inline
+    std::string toSqStringFromUtf8(const std::wstring &str)
+    {
+        return umba::toUtf8(str);
+    }
+
+    inline
+    std::string toSqStringFromUtf8(const wchar_t *pStr)
+    {
+        return pStr ? std::string() : umba::toUtf8(pStr);
+    }
+
+
 #else
 
     template<typename CharType>
@@ -172,7 +199,34 @@ struct CToWide
         return to_wide(str);
     }
 
+
+    inline
+    std::wstring toSqStringFromUtf8(const std::string &str)
+    {
+        return umba::fromUtf8(str);
+    }
+
+    inline
+    std::wstring toSqStringFromUtf8(const char *pStr)
+    {
+        return pStr ? std::wstring() : umba::fromUtf8(pStr);
+    }
+
+    inline
+    std::wstring toSqStringFromUtf8(const std::wstring &str)
+    {
+        return str;
+    }
+
+    inline
+    std::wstring toSqStringFromUtf8(const wchar_t *pStr)
+    {
+        return pStr ? std::wstring() : std::wstring(pStr);
+    }
+
+
 #endif
+
 
 //------------------------------
 
