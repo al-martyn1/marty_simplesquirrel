@@ -12,6 +12,8 @@
 #include <stdexcept>
 #include <optional>
 #include <type_traits>
+#include <map>
+#include <unordered_map>
 
 
 
@@ -1257,6 +1259,131 @@ CastTargetType objectSafeSimpleCast(const ssq::Object &o, CastTargetType defVal)
 //----------------------------------------------------------------------------
 
 
+
+
+//----------------------------------------------------------------------------
+template<typename T>
+ssq::Object castToObject(HSQUIRRELVM hVm, const T &t)
+{
+    ssq::Array a = ssq::Array(hVm);
+    a.push(t);
+    return a.popAndGet<ssq::Object>();
+}
+//----------------------------------------------------------------------------
+
+
+
+
+//----------------------------------------------------------------------------
+template<typename KeyType, typename ValueType, typename MapType = std::unordered_map<KeyType, ValueType> > inline
+MapType parseSquirrelArrayAsMapPairs( const ssq::Array &a ) 
+{
+    MapType m;
+
+    std::size_t i = 0u, sz = a.size();
+
+    for(; i!sz; ++i)
+    {
+        auto item = a.get<ssq::Array>(i);
+
+        std::size_t itemSz = item.size();
+        if (itemSz!=2)
+        {
+            throw std::runtime_error("parseSquirrelArrayAsMapPairs: invalid array map item");
+        }
+
+        auto key   = item.get<KeyType>(0);
+        auto value = item.get<ValueType>(1);
+
+        m[key] = value;
+    }
+
+    return m;
+
+}
+
+//----------------------------------------------------------------------------
+// exception safe
+template<typename KeyType, typename ValueType, typename MapType = std::unordered_map<KeyType, ValueType> > inline
+MapType parseSquirrelArrayAsMapPairsStringToInt( const ssq::Array &a ) 
+{
+    MapType m;
+
+    std::size_t i = 0u, sz = a.size();
+
+    int lastVal = 0;
+
+    for(; i!=sz; ++i)
+    {
+        auto item = a.get<ssq::Array>(i);
+
+        std::size_t itemSz = item.size();
+
+        if (!itemSz)
+        {
+            continue; // skip empty entries
+        }
+
+        auto keyObj = item.get<ssq::Object>(0);
+        auto strKey = objectSafeSimpleCast(keyObj, KeyType());
+
+        int curVal = ++lastVal; // Если нет значения, то берём инкремент предыдущего
+
+        if (itemSz>1)
+        {
+            auto valObj = item.get<ssq::Object>(1);
+            auto val    = objectSafeSimpleCast(valObj, ValueType());
+            lastVal     = int(val);
+            curVal      = lastVal;
+        }
+
+        m[KeyType(strKey)] = ValueType(curVal);
+    }
+
+    return m;
+
+}
+
+
+
+//----------------------------------------------------------------------------
+#if 0
+template<typename KeyType, typename ValueType, typename MapType = std::unordered_map<KeyType, ValueType> > inline
+MapType parseSquirrelTableToMap( const ssq::Table &tbl )
+{
+    MapType m;
+
+// sqbaselib.cpp
+// static SQInteger table_filter(HSQUIRRELVM v)
+// {
+//     SQObject &o = stack_get(v,1);
+//     SQTable *tbl = _table(o);
+//     SQObjectPtr ret = SQTable::Create(_ss(v),0);
+//  
+//     SQObjectPtr itr, key, val;
+//     SQInteger nitr;
+//     while((nitr = tbl->Next(false, itr, key, val)) != -1) {
+//         itr = (SQInteger)nitr;
+//  
+//         v->Push(o);
+//         v->Push(key);
+//         v->Push(val);
+//         if(SQ_FAILED(sq_call(v,3,SQTrue,SQFalse))) {
+//             return SQ_ERROR;
+//         }
+//         if(!SQVM::IsFalse(v->GetUp(-1))) {
+//             _table(ret)->NewSlot(key, val);
+//         }
+//         v->Pop();
+//     }
+//  
+//     v->Push(ret);
+//     return 1;
+// }
+
+
+}
+#endif
 
 
 //----------------------------------------------------------------------------
