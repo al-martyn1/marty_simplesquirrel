@@ -3,6 +3,7 @@
 #include <simplesquirrel/simplesquirrel.hpp>
 //
 #include "marty_cpp/marty_cpp.h"
+#include "marty_cpp/marty_enum.h"
 //
 #include "umba/filename.h"
 #include "umba/utf8.h"
@@ -1347,6 +1348,42 @@ std::enable_if_t<std::is_enum<CastTargetType>::value, CastTargetType>
 objectSimpleCast(const ssq::Object &o)
 {
     typedef typename std::underlying_type<CastTargetType>::type CastTargetUnderlyingType;
+    CastTargetUnderlyingType u =  objectSimpleCast<CastTargetUnderlyingType>(o);
+    return (CastTargetType)u;
+}
+
+//------------------------------
+// Перечисления
+template<typename CastTargetType>
+std::enable_if_t<std::is_enum<CastTargetType>::value, CastTargetType>
+objectEnumCast(const ssq::Object &o)
+{
+    typedef typename std::underlying_type<CastTargetType>::type CastTargetUnderlyingType;
+
+    auto objType = o.getType();
+
+    if (objType==ssq::Type::STRING)
+    {
+        auto scStr = o.toString();
+        auto str = to_ascii(scStr);
+
+        //TODO: !!! Тут неплохо бы заюзать шаблонную версию, которая кидает исключение
+        // Но пока мы считаем, что у любого enum -1 это invalid value
+
+        // Это пока не работает
+        // CastTargetType enumVal = enum_deserialize_unsafe<CastTargetType>(str);
+
+        CastTargetType enumVal = enum_deserialize(str, (CastTargetType)-1);
+        if (enumVal==(CastTargetType)-1)
+        {
+            THROW_MARTY_CPP_MARTY_ENUM_DESERIALIZE_ERROR("EnumType", str);
+        }
+
+        return enumVal;
+
+    }
+
+    // Тут просто пытаемся из integer/float скастить
     //std::underlying_type<CastTargetType>::type u = fromObjectConvertHelper< std::underlying_type<CastTargetType>::type >(o, _SC("result")); // usualy used for result conversion
     CastTargetUnderlyingType u =  objectSimpleCast<CastTargetUnderlyingType>(o);
     return (CastTargetType)u;
