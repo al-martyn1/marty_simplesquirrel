@@ -922,23 +922,44 @@ ssq::Table findOrCreateTable(TVM &vm, const std::string &name)
     {
     }
 
-    return vm.addTable(to_sqstring(name).c_str());
+    return std::move(vm.addTable(to_sqstring(name).c_str()));
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+ssq::Table findOrCreateTable(TVM &vm, const std::wstring &name)
+{
+    try
+    {
+        ssq::Object obj = vm.find(to_sqstring(name).c_str());
+        if (obj.getType()==ssq::Type::TABLE)
+        {
+            return ssq::Table(obj);
+        }
+
+        throw std::runtime_error("marty_simplesquirrel::findOrCreateTable: failed to find or create table");
+
+    }
+    catch (const ssq::NotFoundException&)
+    {
+    }
+
+    return std::move(vm.addTable(to_sqstring(name).c_str()));
 }
 
 //----------------------------------------------------------------------------
 inline
-ssq::sqstring prepareFunctionFullQualifiedName(const ssq::sqstring &name)
+std::string prepareFunctionFullQualifiedName(const std::string &name)
 {
-    typedef ssq::sqstring::value_type CharType;
     // В squirrel полностью квалифицированное имя функции разделяется как и в плюсиках, через двойное двоеточие, но это неудобно
     // А иногда через точку, там хз как
     // В именах не допустим символ '/', поэтому, раз пошла такая пьянка, то добавим возможность задавать FQNs как пути в юниксах
-    ssq::sqstring res;
+    std::string res;
     bool prevColon = false;
 
     for(const auto ch: name)
     {
-        if (ch==(CharType)':' || ch==(CharType)'/')
+        if (ch==':' || ch=='/')
         {
             if (prevColon)
             {
@@ -946,19 +967,54 @@ ssq::sqstring prepareFunctionFullQualifiedName(const ssq::sqstring &name)
             }
             else
             {
-                res.append(1,(CharType)'.');
+                res.append(1,'.');
                 prevColon = true;
             }
         }
         else
         {
-            res.append(1, (CharType)ch);
+            res.append(1, ch);
             prevColon = false;
         }
     }
 
     return res;
 }
+
+//----------------------------------------------------------------------------
+inline
+std::wstring prepareFunctionFullQualifiedName(const std::wstring &name)
+{
+    // В squirrel полностью квалифицированное имя функции разделяется как и в плюсиках, через двойное двоеточие, но это неудобно
+    // А иногда через точку, там хз как
+    // В именах не допустим символ '/', поэтому, раз пошла такая пьянка, то добавим возможность задавать FQNs как пути в юниксах
+    std::wstring res;
+    bool prevColon = false;
+
+    for(const auto ch: name)
+    {
+        if (ch==L':' || ch==L'/')
+        {
+            if (prevColon)
+            {
+                // ничего делать не надо
+            }
+            else
+            {
+                res.append(1,L'.');
+                prevColon = true;
+            }
+        }
+        else
+        {
+            res.append(1, ch);
+            prevColon = false;
+        }
+    }
+
+    return res;
+}
+
 
 //----------------------------------------------------------------------------
 template<typename TObject, typename IterType > inline
@@ -1013,6 +1069,64 @@ bool findObjectByFullQualifiedName(TObject &rootObj, const ssq::sqstring &name, 
     }
 
     return findObjectByFullQualifiedName(rootObj, names.cbegin(), names.cend(), objFound);
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+ssq::Table findOrCreateTableByFullQualifiedName(TVM &vm, const std::string &name)
+{
+    auto preparedFqn = prepareFunctionFullQualifiedName(name);
+
+    std::vector<std::string> names = marty_cpp::simple_string_split(preparedFqn, '.' /* , -1 */  /* nSplits */ );
+    if (names.empty() || (names.size()==1 && names[0].empty())) //TODO: !!! Bug workaround, bug is need to be fixed
+    {
+        throw std::runtime_error("Invalid table FQN taken");
+    }
+
+    ssq::Table resTable = ssq::Table(vm);
+    std::vector<std::string>::const_iterator nit = names.begin();
+    for(; nit!=names.end(); ++nit)
+    {
+        resTable = findOrCreateTable(resTable, *nit);
+    }
+
+    return std::move(resTable);
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+ssq::Table findOrCreateTableByFullQualifiedName(TVM &vm, const std::wstring &name)
+{
+    auto preparedFqn = prepareFunctionFullQualifiedName(name);
+
+    std::vector<std::wstring> names = marty_cpp::simple_string_split(preparedFqn, L'.' /* , -1 */  /* nSplits */ );
+    if (names.empty() || (names.size()==1 && names[0].empty())) //TODO: !!! Bug workaround, bug is need to be fixed
+    {
+        throw std::runtime_error("Invalid table FQN taken");
+    }
+
+    ssq::Table resTable = ssq::Table(vm);
+    std::vector<std::wstring>::const_iterator nit = names.begin();
+    for(; nit!=names.end(); ++nit)
+    {
+        resTable = findOrCreateTable(resTable, *nit);
+    }
+
+    return std::move(resTable);
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+ssq::Table findOrCreateTableByFqn(TVM &vm, const std::string &name)
+{
+    return std::move(findOrCreateTableByFullQualifiedName(vm, name));
+}
+
+//----------------------------------------------------------------------------
+template<typename TVM> inline
+ssq::Table findOrCreateTableByFqn(TVM &vm, const std::wstring &name)
+{
+    return std::move(findOrCreateTableByFullQualifiedName(vm, name));
 }
 
 //----------------------------------------------------------------------------

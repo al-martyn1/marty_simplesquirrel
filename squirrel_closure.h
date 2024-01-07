@@ -26,6 +26,7 @@ protected:
     //ssq::VM                        vm     ;
 
     ssq::VM                       *pVm = 0;
+    //HSQUIRRELVM                      hvm = 0;
 
     // template<typename ObjType>
     // void resetObject(ObjType &rst)
@@ -43,10 +44,12 @@ public:
         std::swap(optClosure , other.optClosure);
         std::swap(ssqThis    , other.ssqThis);
         std::swap(pVm        , other.pVm);
+        //std::swap(hvm        , other.hvm);
     }
 
     SquirrelClosure() = delete;
     // SquirrelClosure(const ssq::sqstring &n) : name(n), optClosure(std::nullopt), ssqThis(), optVm(std::nullopt) {}
+    //SquirrelClosure(const ssq::sqstring &n) : name(n), optClosure(std::nullopt), ssqThis(), hvm(0) {}
     SquirrelClosure(const ssq::sqstring &n) : name(n), optClosure(std::nullopt), ssqThis(), pVm(0) {}
 
     SquirrelClosure(const SquirrelClosure &) = delete;
@@ -75,6 +78,7 @@ public:
         //boundClosure.optVm           = std::optional<ssq::VM>(std::in_place, vm);
         //boundClosure.optVm           = std::make_optional<ssq::VM>(vm);
         boundClosure.pVm             = const_cast<ssq::VM*>(&vm);
+        //boundClosure.hvm             = vm.getHandle();
         boundClosure.optClosure      = marty_simplesquirrel::findFuncOptionalEx(obj, name, boundClosure.ssqThis);
         return boundClosure;
     }
@@ -90,6 +94,11 @@ public:
         {
             return false;
         }
+
+        // if (!hvm)
+        // {
+        //     return false;
+        // }
 
         return true;
     }
@@ -110,6 +119,12 @@ public:
             // Тоже неплохая идея использовать std::bad_optional_access
             throw std::bad_optional_access( /* "Failed to call '" + encoding::toUtf8(name) + "' squirrel closure" */ );
         }
+
+        // if (!hvm)
+        // {
+        //     // Тоже неплохая идея использовать std::bad_optional_access
+        //     throw std::bad_optional_access( /* "Failed to call '" + encoding::toUtf8(name) + "' squirrel closure" */ );
+        // }
 
         // тут ещё проверки на всякую валидность
         //return ssq::VM(ssqThis.getHandle()).callFunc(optClosure.value(), ssqThis, std::forward<Args>(args) ...);
