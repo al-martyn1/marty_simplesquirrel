@@ -923,7 +923,8 @@ ssq::Table findOrCreateTable(TVM &vm, const std::string &name)
     {
     }
 
-    return std::move(vm.addTable(to_sqstring(name).c_str()));
+    // return std::move(vm.addTable(to_sqstring(name).c_str()));
+    return vm.addTable(to_sqstring(name).c_str());
 }
 
 //----------------------------------------------------------------------------
@@ -945,7 +946,8 @@ ssq::Table findOrCreateTable(TVM &vm, const std::wstring &name)
     {
     }
 
-    return std::move(vm.addTable(to_sqstring(name).c_str()));
+    // return std::move(vm.addTable(to_sqstring(name).c_str()));
+    return vm.addTable(to_sqstring(name).c_str());
 }
 
 //----------------------------------------------------------------------------
@@ -1091,7 +1093,8 @@ ssq::Table findOrCreateTableByFullQualifiedName(TVM &vm, const std::string &name
         resTable = findOrCreateTable(resTable, *nit);
     }
 
-    return std::move(resTable);
+    // return std::move(resTable);
+    return resTable;
 }
 
 //----------------------------------------------------------------------------
@@ -1113,21 +1116,24 @@ ssq::Table findOrCreateTableByFullQualifiedName(TVM &vm, const std::wstring &nam
         resTable = findOrCreateTable(resTable, *nit);
     }
 
-    return std::move(resTable);
+    // return std::move(resTable);
+    return resTable;
 }
 
 //----------------------------------------------------------------------------
 template<typename TVM> inline
 ssq::Table findOrCreateTableByFqn(TVM &vm, const std::string &name)
 {
-    return std::move(findOrCreateTableByFullQualifiedName(vm, name));
+    // return std::move(findOrCreateTableByFullQualifiedName(vm, name));
+    return findOrCreateTableByFullQualifiedName(vm, name);
 }
 
 //----------------------------------------------------------------------------
 template<typename TVM> inline
 ssq::Table findOrCreateTableByFqn(TVM &vm, const std::wstring &name)
 {
-    return std::move(findOrCreateTableByFullQualifiedName(vm, name));
+    // return std::move(findOrCreateTableByFullQualifiedName(vm, name));
+    return findOrCreateTableByFullQualifiedName(vm, name);
 }
 
 //----------------------------------------------------------------------------
