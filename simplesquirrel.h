@@ -1,6 +1,16 @@
 #pragma once
 
+
+#include "umba/umba.h"
+//
+
+#include "warnings_disable.h"
+//
+
+#include <squirrel.h>
 #include <simplesquirrel/simplesquirrel.hpp>
+//
+#include "warnings_restore.h"
 //
 #include "marty_cpp/marty_cpp.h"
 #include "marty_cpp/marty_enum.h"
@@ -16,7 +26,8 @@
 #include <map>
 #include <unordered_map>
 
-
+//
+#include "enums.h"
 
 // marty_simplesquirrel::
 
@@ -852,51 +863,124 @@ ssq::sqstring makeFlagScriptString( const std::string &enumPrefix, const std::st
 
 //----------------------------------------------------------------------------
 template<typename... EnumVal> inline
-ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix, const std::string &enumNameOnly, const std::string &itemTypeString, char itemSep, char enumSep, EnumVal... vals)
+ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
+                                       , const std::string &enumNameOnly
+                                       , const std::string &itemTypeString
+                                       , EnumScriptGenerationType generationType
+                                       // , char itemSep
+                                       // , char enumSep
+                                       , EnumVal... vals
+                                       )
 {
     //known.insert(utils::to_sqstring(enumNameOnly));
     //(void)known;
 
-    std::string enumName = enumPrefix+enumNameOnly;
+    std::string enumFqName;
+    if (enumPrefix.empty() || enumPrefix.back()=='.')
+    {
+        enumFqName = enumPrefix + enumNameOnly;
+    }
+    else
+    {
+        enumFqName = enumPrefix + "." + enumNameOnly;
+    }
 
     std::vector< std::pair<std::string, int> > valNameVec = makeEnumValuesVector(vals...);
 
-    std::string res = "class " + enumName + "{";
+    std::string res;
+    bool bMultiline = true;
 
-    for(auto p: valNameVec)
+    auto appendLinefeed = [&]()
     {
-        res.append("static ");
-        if (!p.first.empty())
+        if (bMultiline)
         {
-            char firstCh = p.first[0];
+            res.append(1, '\n');
+        }
+    };
+
+    auto appendItemSep = [&]()
+    {
+        if (!bMultiline)
+        {
+            res.append(1, ' ');
+        }
+    };
+
+    auto appendIndend = [&]()
+    {
+        res.append(bMultiline ? 4u : 1u, ' ');
+    };
+
+    auto appendName = [&](const std::string &name)
+    {
+        if (!name.empty())
+        {
+            char firstCh = name[0];
             if (firstCh>='0' && firstCh<='9')
             {
-                res.append("_");
+                res.append(1,'_');
             }
         }
 
-        res.append(p.first);
-        //res.append("<-");
-        res.append("=");
+        res.append(name);
+    
+    };
+
+    auto appendValue = [&](auto val)
+    {
         if (!itemTypeString.empty())
         {
             res.append(itemTypeString);
             res.append("(");
         }
 
-        res.append(std::to_string(p.second));
+        res.append(std::to_string(val));
 
         if (!itemTypeString.empty())
         {
             res.append(")");
         }
-        res.append(1, itemSep );
+    };
+
+
+    if (generationType==EnumScriptGenerationType::singleLineScript || generationType==EnumScriptGenerationType::multiLineScript)
+    {
+        bMultiline = generationType==EnumScriptGenerationType::multiLineScript;
+        res = "class " + enumFqName + "{";
+        appendLinefeed();
+    
+        for(auto p: valNameVec)
+        {
+            appendIndend();
+            res.append("static ");
+            appendName(p.first);
+            //res.append("<-");
+
+            res.append("=");
+            appendValue(p.second);
+
+            //res.append(1,';'); // itemSep
+            //res.append(1,' '); // itemSep
+            appendItemSep();
+            appendLinefeed();
+        }
+    
+        res.append("}");
+        //res.append(1, enumSep );
+        res.append(1,';');
+        appendLinefeed();
+        appendLinefeed();
+
+        return marty_simplesquirrel::to_sqstring(res);
+
     }
-
-    res.append("}");
-    res.append(1, enumSep );
-
-    return marty_simplesquirrel::to_sqstring(res);
+    else // EnumScriptGenerationType::mdDoc
+    {
+        throw std::runtime_error("Not omplemented");
+        //return _SC("");
+        //return ssq::sqstring
+    }
+    
 }
 
 //----------------------------------------------------------------------------
