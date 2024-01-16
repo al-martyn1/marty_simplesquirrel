@@ -870,14 +870,13 @@ ssq::sqstring makeFlagScriptString( const std::string &enumPrefix, const std::st
 
 //----------------------------------------------------------------------------
 template<typename... EnumVal> inline
-ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
-                                       , const std::string &enumNameOnly
-                                       , const std::string &itemTypeString
-                                       , const EnumScriptGenerationOptions &generationOptions
-                                       // , char itemSep
-                                       // , char enumSep
-                                       , EnumVal... vals
-                                       )
+ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
+                                         , const std::string &enumNameOnly
+                                         , const std::string &itemTypeString
+                                         , const EnumScriptGenerationOptions &generationOptions
+                                         , const std::vector< std::pair<std::string, int> > &extra
+                                         , EnumVal... vals
+                                         )
 {
     //known.insert(utils::to_sqstring(enumNameOnly));
     //(void)known;
@@ -893,6 +892,7 @@ ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
     }
 
     std::vector< std::pair<std::string, int> > valNameVec = makeEnumValuesVector(vals...);
+    valNameVec.insert(valNameVec.end(), extra.begin(), extra.end());
 
     std::string res;
     bool bMultiline = true;
@@ -983,6 +983,7 @@ ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
     }
     else if (generationOptions.generationType==EnumScriptGenerationType::trTemplate)
     {
+
         marty_tr::tr_add(std::string("__DESCRIPTION"), std::string(), enumFqName, generationOptions.mdLang);
 
         for(auto p: valNameVec)
@@ -1059,9 +1060,16 @@ ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
 }
 
 //----------------------------------------------------------------------------
-
-
-
+template<typename... EnumVal> inline
+ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
+                                       , const std::string &enumNameOnly
+                                       , const std::string &itemTypeString
+                                       , const EnumScriptGenerationOptions &generationOptions
+                                       , EnumVal... vals
+                                       )
+{
+    return makeEnumClassScriptStringEx(enumPrefix, enumNameOnly, itemTypeString, generationOptions, std::vector< std::pair<std::string, int> >(), std::forward<EnumVal>(vals) ...);
+}
 
 //----------------------------------------------------------------------------
 template<typename TVM> inline
