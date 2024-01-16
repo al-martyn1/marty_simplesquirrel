@@ -25,7 +25,7 @@
 
 
 @set ENUMSCRIPTGENERATIONTYPE_GEN_FLAGS=--enum-flags=0 --enum-flags=type-decl,serialize,deserialize,lowercase,enum-class,fmt-hex %VALUES_CAMEL% %SERIALIZE_PASCAL%
-@set ENUMSCRIPTGENERATIONTYPE_DEF=invalid,unknown=-1;singleLineScript=0;multiLineScript;mdDoc
+@set ENUMSCRIPTGENERATIONTYPE_DEF=invalid,unknown=-1;singleLineScript=0;multiLineScript;mdDoc;trTemplate
 
 
 umba-enum-gen %GEN_OPTS% %HEX2% %TPL_OVERRIDE% ^

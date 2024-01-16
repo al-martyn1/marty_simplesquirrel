@@ -30,6 +30,9 @@
 #include "types.h"
 #include "enums.h"
 
+#include "marty_tr/marty_tr.h"
+
+
 // marty_simplesquirrel::
 
 namespace marty_simplesquirrel {
@@ -978,13 +981,81 @@ ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
         return marty_simplesquirrel::to_sqstring(res);
 
     }
+    else if (generationOptions.generationType==EnumScriptGenerationType::trTemplate)
+    {
+        marty_tr::tr_add(std::string("__DESCRIPTION"), std::string(), enumFqName, generationOptions.mdLang);
+
+        for(auto p: valNameVec)
+        {
+            marty_tr::tr_add(p.first, std::string() /* p.first */ , enumFqName, generationOptions.mdLang);
+        }
+
+        marty_tr::tr_add(std::string("__REMARKS"), std::string(), enumFqName, generationOptions.mdLang);
+
+        return toSqStringFromUtf8(marty_tr::tr_serialize_translations(marty_tr::tr_get_all_translations(), 2  /* indent */));
+    }
+    else if (generationOptions.generationType==EnumScriptGenerationType::mdDoc)
+    {
+        bMultiline = true;
+        
+        res.append(generationOptions.mdSectionSep);
+        appendLinefeed();
+        res.append(generationOptions.mdSectionLevel, '#'); res.append(1, ' '); res.append(enumFqName);
+
+        if (marty_tr::tr_has_msg(std::string("__DESCRIPTION"), enumFqName, generationOptions.mdLang))
+        {
+            res.append(marty_tr::tr(std::string("__DESCRIPTION"), enumFqName, generationOptions.mdLang));
+            appendLinefeed(); appendLinefeed();
+        }
+    
+        for(auto p: valNameVec)
+        {
+            appendLinefeed(); appendLinefeed();
+            res.append("**");
+            appendName(p.first);
+            res.append("**");
+            if (generationOptions.mdAddVals)
+            {
+                res.append(" (");
+                appendValue(p.second);
+                res.append(")");
+            }
+    
+            res.append(" - ");
+            res.append(marty_tr::tr(p.first, enumFqName, generationOptions.mdLang));
+        }
+    
+        appendLinefeed(); appendLinefeed();
+
+        if (marty_tr::tr_has_msg(std::string("__REMARKS"), enumFqName, generationOptions.mdLang))
+        {
+            res.append(generationOptions.mdSectionLevel+1, '#'); res.append(1, ' '); 
+            res.append(marty_tr::tr(std::string("remarks-subsection-title"), std::string("md-common"), generationOptions.mdLang));
+            appendLinefeed(); appendLinefeed();
+            res.append(marty_tr::tr(std::string("__REMARKS"), enumFqName, generationOptions.mdLang));
+            appendLinefeed(); appendLinefeed();
+        }
+
+        return toSqStringFromUtf8(res);
+        
+
+        //tr_add(const std::string &msgId, const std::string &msgText, const std::string &catId)
+
+    // bool                          mdGenerateTr   = false;
+    // std::size_t                   mdSectionLevel = 3;
+    // std::string                   mdLang         = "en";
+    // std::string                   mdSectionSep   = "-------";
+
+    //    std::string res;
+
+        // marty_tr::
+        // std::string tr(const std::string &msgId, std::string catId, std::string langId)
+        // std::string tr(const std::string &msgId, const std::string &catId)
+    }
     else // EnumScriptGenerationType::mdDoc
     {
-        throw std::runtime_error("Not omplemented");
-        //return _SC("");
-        //return ssq::sqstring
+        throw std::runtime_error("Not implemented");
     }
-    
 }
 
 //----------------------------------------------------------------------------
