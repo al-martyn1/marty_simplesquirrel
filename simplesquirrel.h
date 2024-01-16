@@ -27,6 +27,7 @@
 #include <unordered_map>
 
 //
+#include "types.h"
 #include "enums.h"
 
 // marty_simplesquirrel::
@@ -800,6 +801,7 @@ std::vector< std::pair<std::string, int> > makeEnumValuesVector( First first, En
 
 
 //----------------------------------------------------------------------------
+#if 0
 template<typename... EnumVal> inline
 ssq::sqstring makeEnumScriptString( const std::string &enumPrefix, const std::string &enumNameOnly, char itemSep, char enumSep, std::set<ssq::sqstring> &known, EnumVal... vals)
 {
@@ -824,8 +826,9 @@ ssq::sqstring makeEnumScriptString( const std::string &enumPrefix, const std::st
 
     return marty_simplesquirrel::to_sqstring(res);
 }
-
+#endif
 //----------------------------------------------------------------------------
+#if 0
 template<typename... EnumVal> inline
 ssq::sqstring makeFlagScriptString( const std::string &enumPrefix, const std::string &enumNameOnly, char itemSep, char enumSep, std::set<ssq::sqstring> &known, EnumVal... vals)
 {
@@ -860,13 +863,14 @@ ssq::sqstring makeFlagScriptString( const std::string &enumPrefix, const std::st
 
     return utils::to_sqstring(res);
 }
+#endif
 
 //----------------------------------------------------------------------------
 template<typename... EnumVal> inline
 ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
                                        , const std::string &enumNameOnly
                                        , const std::string &itemTypeString
-                                       , EnumScriptGenerationType generationType
+                                       , const EnumScriptGenerationOptions &generationOptions
                                        // , char itemSep
                                        // , char enumSep
                                        , EnumVal... vals
@@ -943,9 +947,9 @@ ssq::sqstring makeEnumClassScriptString( const std::string &enumPrefix
     };
 
 
-    if (generationType==EnumScriptGenerationType::singleLineScript || generationType==EnumScriptGenerationType::multiLineScript)
+    if (generationOptions.generationType==EnumScriptGenerationType::singleLineScript || generationOptions.generationType==EnumScriptGenerationType::multiLineScript)
     {
-        bMultiline = generationType==EnumScriptGenerationType::multiLineScript;
+        bMultiline = generationOptions.generationType==EnumScriptGenerationType::multiLineScript;
         res = "class " + enumFqName + "{";
         appendLinefeed();
     
