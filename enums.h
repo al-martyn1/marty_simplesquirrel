@@ -23,6 +23,8 @@ enum class EnumScriptGenerationType : std::uint32_t
 
 }; // enum class EnumScriptGenerationType : std::uint32_t
 
+MARTY_CPP_MAKE_ENUM_IS_FLAGS_FOR_NON_FLAGS_ENUM(EnumScriptGenerationType)
+
 MARTY_CPP_ENUM_CLASS_SERIALIZE_BEGIN( EnumScriptGenerationType, std::map, 1 )
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( EnumScriptGenerationType::invalid            , "Invalid"          );
     MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( EnumScriptGenerationType::singleLineScript   , "SingleLineScript" );
