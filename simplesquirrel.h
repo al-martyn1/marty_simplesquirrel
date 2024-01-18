@@ -3,7 +3,9 @@
 
 #include "umba/umba.h"
 //
-
+#include "umba/macro_helpers.h"
+#include "umba/macros.h"
+//
 #include "warnings_disable.h"
 //
 
@@ -17,6 +19,7 @@
 //
 #include "umba/filename.h"
 #include "umba/utf8.h"
+#include "umba/string_plus.h"
 
 //
 #include <exception>
@@ -25,6 +28,8 @@
 #include <type_traits>
 #include <map>
 #include <unordered_map>
+#include <tuple>
+#include <sstream>
 
 //
 #include "types.h"
@@ -933,7 +938,7 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
     
     };
 
-    auto appendValue = [&](auto val)
+    auto appendValue = [&](auto val, bool hexFormat)
     {
         if (!itemTypeString.empty())
         {
@@ -941,7 +946,23 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
             res.append("(");
         }
 
-        res.append(std::to_string(val));
+        if (!hexFormat)
+        {
+            res.append(std::to_string(val));
+        }
+        else
+        {
+            if (val==0)
+            {
+                res.append("0");
+            }
+            else
+            {
+                std::stringstream ss;
+                ss << "0x" << std::uppercase << std::hex << val;
+                res.append(ss.str());
+            }
+        }
 
         if (!itemTypeString.empty())
         {
@@ -964,7 +985,7 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
             //res.append("<-");
 
             res.append("=");
-            appendValue(p.second);
+            appendValue(p.second, false);
 
             //res.append(1,';'); // itemSep
             //res.append(1,' '); // itemSep
@@ -998,15 +1019,37 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
     else if (generationOptions.generationType==EnumScriptGenerationType::mdDoc)
     {
         bMultiline = true;
-        
+
         res.append(generationOptions.mdSectionSep);
         appendLinefeed();
-        res.append(generationOptions.mdSectionLevel, '#'); res.append(1, ' '); res.append(enumFqName);
+
+        auto enumFqNameLower  = umba::string_plus::tolower_copy(enumFqName);
+        bool needValHexFormat = enumFqNameLower.find("color")!=enumFqNameLower.npos
+                             //||
+                              ;
+
+        // Parameter pack (since C++11) - https://en.cppreference.com/w/cpp/language/parameter_pack
+        // C++20 idioms for parameter packs - https://www.scs.stanford.edu/~dm/blog/param-pack.html
+        using FirstEnumType = typename std::tuple_element<0, std::tuple<EnumVal...>>::type;
+        
+        bool isFlags = enum_is_flags((FirstEnumType)0);
+        res.append(isFlags?"flags":"enum");
+        res.append(1,' ');
+        res.append(enumFqName);
+        appendLinefeed();
+
+        auto secTitleFormat = marty_tr::tr((isFlags?"flags":"enum") + std::string("-section-title"), std::string("_md-common"), generationOptions.mdLang);
+        umba::macros::StringStringMap<std::string> titleMacros;
+        titleMacros["Type"] = (isFlags?"flags":"enum");
+        titleMacros["Name"] = enumFqName;
+        auto formattedSecTitle = umba::macros::substMacros(secTitleFormat, umba::macros::MacroTextFromMapRef<std::string>(titleMacros), umba::macros::keepUnknownVars);
+        res.append(generationOptions.mdSectionLevel, '#'); res.append(1, ' ');
+        res.append(formattedSecTitle);
 
         if (marty_tr::tr_has_msg(std::string("__DESCRIPTION"), enumFqName, generationOptions.mdLang))
         {
-            res.append(marty_tr::tr(std::string("__DESCRIPTION"), enumFqName, generationOptions.mdLang));
             appendLinefeed(); appendLinefeed();
+            res.append(marty_tr::tr(std::string("__DESCRIPTION"), enumFqName, generationOptions.mdLang));
         }
     
         for(auto p: valNameVec)
@@ -1018,7 +1061,7 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
             if (generationOptions.mdAddVals)
             {
                 res.append(" (");
-                appendValue(p.second);
+                appendValue(p.second, isFlags || needValHexFormat);
                 res.append(")");
             }
     
@@ -1030,11 +1073,12 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
 
         if (marty_tr::tr_has_msg(std::string("__REMARKS"), enumFqName, generationOptions.mdLang))
         {
+            appendLinefeed(); appendLinefeed();
             res.append(generationOptions.mdSectionLevel+1, '#'); res.append(1, ' '); 
-            res.append(marty_tr::tr(std::string("remarks-subsection-title"), std::string("md-common"), generationOptions.mdLang));
+            res.append(marty_tr::tr(std::string("remarks-subsection-title"), std::string("_md-common"), generationOptions.mdLang));
             appendLinefeed(); appendLinefeed();
             res.append(marty_tr::tr(std::string("__REMARKS"), enumFqName, generationOptions.mdLang));
-            appendLinefeed(); appendLinefeed();
+            //appendLinefeed(); appendLinefeed();
         }
 
         return toSqStringFromUtf8(res);
