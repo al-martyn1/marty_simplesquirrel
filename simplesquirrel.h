@@ -207,7 +207,6 @@ struct CToWide
         return pStr ? std::string() : umba::toUtf8(pStr);
     }
 
-
 #else
 
     template<typename CharType>
@@ -249,6 +248,33 @@ struct CToWide
 
 
 #endif
+
+
+inline
+std::string fromSqStringToUtf8(const std::string &sqStr)
+{
+    return sqStr;
+}
+
+inline
+std::string fromSqStringToUtf8(const std::wstring &sqStr)
+{
+    return umba::toUtf8(sqStr);
+}
+
+inline
+std::string fromSqStringToUtf8(const char* pSqStr)
+{
+    return pSqStr ? std::string() : std::string(pSqStr);
+}
+
+inline
+std::string fromSqStringToUtf8(const wchar_t* pSqStr)
+{
+    return pSqStr ? std::string() : umba::toUtf8(pSqStr);
+}
+
+
 
 
 //------------------------------
@@ -1020,23 +1046,30 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
     {
         bMultiline = true;
 
-        res.append(generationOptions.mdSectionSep);
-        appendLinefeed();
-
         auto enumFqNameLower  = umba::string_plus::tolower_copy(enumFqName);
         bool needValHexFormat = enumFqNameLower.find("color")!=enumFqNameLower.npos
                              //||
                               ;
 
+        res.append(generationOptions.mdSectionSep);
+        if (!generationOptions.mdSectionSep.empty())
+        {
+            appendLinefeed();
+        }
+
         // Parameter pack (since C++11) - https://en.cppreference.com/w/cpp/language/parameter_pack
         // C++20 idioms for parameter packs - https://www.scs.stanford.edu/~dm/blog/param-pack.html
         using FirstEnumType = typename std::tuple_element<0, std::tuple<EnumVal...>>::type;
-        
+
         bool isFlags = enum_is_flags((FirstEnumType)0);
-        res.append(isFlags?"flags":"enum");
-        res.append(1,' ');
-        res.append(enumFqName);
-        appendLinefeed();
+        if (!generationOptions.mdSectionSep.empty())
+        {
+            res.append(generationOptions.makeSectionInformerString(std::string(isFlags?"flags":"enum") + " " + enumFqName));
+            // res.append(isFlags?"flags":"enum");
+            // res.append(1,' ');
+            // res.append(enumFqName);
+            // appendLinefeed();
+        }
 
         auto secTitleFormat = marty_tr::tr((isFlags?"flags":"enum") + std::string("-section-title"), std::string("_md-common"), generationOptions.mdLang);
         umba::macros::StringStringMap<std::string> titleMacros;
