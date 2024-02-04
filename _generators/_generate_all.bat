@@ -27,8 +27,13 @@
 @set ENUMSCRIPTGENERATIONTYPE_GEN_FLAGS=--enum-flags=0 --enum-flags=type-decl,serialize,deserialize,lowercase,enum-class,fmt-hex %VALUES_CAMEL% %SERIALIZE_PASCAL%
 @set ENUMSCRIPTGENERATIONTYPE_DEF=invalid,unknown=-1;singleLineScript=0;multiLineScript;mdDoc;trTemplate
 
+@set LSTNESTEDTAGSMODE_GEN_FLAGS=--enum-flags=0 --enum-flags=type-decl,serialize,deserialize,lowercase,enum-class,fmt-hex %VALUES_CAMEL% %SERIALIZE_PASCAL%
+@set LSTNESTEDTAGSMODE_DEF=invalid,unknown=-1;keep;remove;empty,emptyLine
+
+
 
 umba-enum-gen %GEN_OPTS% %HEX2% %TPL_OVERRIDE% ^
 %ENUMSCRIPTGENERATIONTYPE_GEN_FLAGS%           %UINT32% -E=EnumScriptGenerationType          -F=%ENUMSCRIPTGENERATIONTYPE_DEF%    ^
+%LSTNESTEDTAGSMODE_GEN_FLAGS%          %UINT32% -E=ListingNestedTagsMode            -F=%LSTNESTEDTAGSMODE_DEF%     ^
 ..\enums.h
 

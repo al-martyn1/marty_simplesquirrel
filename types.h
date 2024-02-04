@@ -37,6 +37,8 @@ struct EnumScriptGenerationOptions
     std::string                   mdFileExt                         = ".md";
     bool                          mdSortNamespaceClasses            = false ;
     bool                          mdAlterTypesSpacing               = false ;
+    ListingNestedTagsMode         listingNestedTagsMode             = ListingNestedTagsMode::remove;
+    std::string                   codeTagPrefix                     = "//!#"; // for listings
 
 
     void addTr(const std::string &str, const std::string &category) const
