@@ -46,6 +46,13 @@ struct EnumScriptGenerationOptions
         marty_tr::tr_add(str, std::string(), category, mdLang);
     }
 
+    void addTrIfEmpty(const std::string &str, const std::string &category) const
+    {
+        marty_tr::tr_add_if_empty(str, std::string(), category, mdLang);
+    }
+
+    // marty_tr::tr_add_if_empty
+
     std::string makeSectionHeaderMdString(const std::string &title) const
     {
         return std::string(mdSectionLevel, '#') + std::string(1, ' ') + title + std::string(1, '\n');

@@ -1031,14 +1031,14 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
     else if (generationOptions.generationType==EnumScriptGenerationType::trTemplate)
     {
 
-        marty_tr::tr_add(std::string("__DESCRIPTION"), std::string(), enumFqName, generationOptions.mdLang);
+        marty_tr::tr_add_if_empty(std::string("__DESCRIPTION"), std::string(), enumFqName, generationOptions.mdLang);
 
         for(auto p: valNameVec)
         {
-            marty_tr::tr_add(p.first, std::string() /* p.first */ , enumFqName, generationOptions.mdLang);
+            marty_tr::tr_add_if_empty(p.first, std::string() /* p.first */ , enumFqName, generationOptions.mdLang);
         }
 
-        marty_tr::tr_add(std::string("__REMARKS"), std::string(), enumFqName, generationOptions.mdLang);
+        marty_tr::tr_add_if_empty(std::string("__REMARKS"), std::string(), enumFqName, generationOptions.mdLang);
 
         return toSqStringFromUtf8(marty_tr::tr_serialize_translations(marty_tr::tr_get_all_translations(), 2  /* indent */));
     }
@@ -1083,6 +1083,8 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
         {
             appendLinefeed(); appendLinefeed();
             res.append(marty_tr::tr(std::string("__DESCRIPTION"), enumFqName, generationOptions.mdLang));
+            appendLinefeed();
+            // res.append(1u,'\n');
         }
     
         for(auto p: valNameVec)
@@ -1111,13 +1113,14 @@ ssq::sqstring makeEnumClassScriptStringEx( const std::string &enumPrefix
             res.append(marty_tr::tr(std::string("remarks-subsection-title"), std::string("_md-common"), generationOptions.mdLang));
             appendLinefeed(); appendLinefeed();
             res.append(marty_tr::tr(std::string("__REMARKS"), enumFqName, generationOptions.mdLang));
+            appendLinefeed(); // res.append(1u,'\n');
             //appendLinefeed(); appendLinefeed();
         }
 
         return toSqStringFromUtf8(res);
         
 
-        //tr_add(const std::string &msgId, const std::string &msgText, const std::string &catId)
+        //tr_add_if_empty(const std::string &msgId, const std::string &msgText, const std::string &catId)
 
     // bool                          mdGenerateTr   = false;
     // std::size_t                   mdSectionLevel = 3;

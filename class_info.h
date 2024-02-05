@@ -1794,10 +1794,15 @@ ssq::sqstring generateFunctionDocs( const FunctionInfo &fi
 
     if (genOptions.generationType==EnumScriptGenerationType::trTemplate)
     {
-        genOptions.addTr("__BRIEF"         , functionFullName);
-        genOptions.addTr("__DESCRIPTION"   , functionFullName);
-        genOptions.addTr("__RETURNS"       , functionFullName);
-        genOptions.addTr("__REMARKS"       , functionFullName);
+        if (functionFullName=="DotNut/Tr/getDefCategory" || functionFullName=="DotNut.Tr.getDefCategory")
+        {
+            int a = 0;
+            MARTY_ARG_USED(a);
+        }
+        genOptions.addTrIfEmpty("__BRIEF"         , functionFullName);
+        genOptions.addTrIfEmpty("__DESCRIPTION"   , functionFullName);
+        genOptions.addTrIfEmpty("__RETURNS"       , functionFullName);
+        genOptions.addTrIfEmpty("__REMARKS"       , functionFullName);
 
     }
 
@@ -1813,7 +1818,7 @@ ssq::sqstring generateFunctionDocs( const FunctionInfo &fi
         if (genOptions.hasTr("__BRIEF", functionFullName))
         {
             appendLinefeed(); //appendLinefeed();
-            res << genOptions.getTr("__BRIEF", classFullName);
+            res << genOptions.getTr("__BRIEF", functionFullName) << "\n";
         }
 
 
@@ -1831,7 +1836,7 @@ ssq::sqstring generateFunctionDocs( const FunctionInfo &fi
         if (genOptions.hasTr("__DESCRIPTION", functionFullName))
         {
             appendLinefeed();
-            res << genOptions.getTr("__DESCRIPTION", functionFullName);
+            res << genOptions.getTr("__DESCRIPTION", functionFullName) << "\n";
             appendLinefeed();
         }
 
@@ -1943,15 +1948,15 @@ ssq::sqstring generateExactClassDocs( const ClassInfo &ci, const EnumScriptGener
 
     if (genOptions.generationType==EnumScriptGenerationType::trTemplate)
     {
-        genOptions.addTr("__BRIEF", classFullName);
-        genOptions.addTr("__DESCRIPTION", classFullName);
+        genOptions.addTrIfEmpty("__BRIEF", classFullName);
+        genOptions.addTrIfEmpty("__DESCRIPTION", classFullName);
         //genOptions.addTr("__REMARKS", classFullName);
 
         for(const auto &fi : ci.functions)
         {
             if (fi.memberField) // для простых полей отдельных страничек не генерим
             {
-                genOptions.addTr(fi.name, classFullName);
+                genOptions.addTrIfEmpty(fi.name, classFullName);
             }
             else // Для функций будет отдельная страничка, там и brief и полное описание
             {
@@ -1973,7 +1978,7 @@ ssq::sqstring generateExactClassDocs( const ClassInfo &ci, const EnumScriptGener
         //  
         //     for(const auto &fi : cit->second.functions)
         //     {
-        //         genOptions.addTr(fi.name, nsFullName);
+        //         genOptions.addTrIfEmpty(fi.name, nsFullName);
         //     }
         // }
     }
@@ -1992,7 +1997,7 @@ ssq::sqstring generateExactClassDocs( const ClassInfo &ci, const EnumScriptGener
         if (genOptions.hasTr("__BRIEF", classFullName))
         {
             appendLinefeed(); appendLinefeed();
-            res << genOptions.getTr("__BRIEF", classFullName);
+            res << genOptions.getTr("__BRIEF", classFullName) << "\n";
         }
 
 
@@ -2121,7 +2126,7 @@ ssq::sqstring generateExactClassDocs( const ClassInfo &ci, const EnumScriptGener
         if (genOptions.hasTr("__DESCRIPTION", classFullName))
         {
             appendLinefeed(); appendLinefeed();
-            res << genOptions.getTr("__DESCRIPTION", classFullName);
+            res << genOptions.getTr("__DESCRIPTION", classFullName) << "\n";
         }
 
         // res << "// Parameters goes here\n";
@@ -2222,7 +2227,7 @@ ssq::sqstring generateClassDocs( const ClassInfo &ci, const EnumScriptGeneration
 
         if (genOptions.generationType==EnumScriptGenerationType::trTemplate)
         {
-            genOptions.addTr(std::string("__DESCRIPTION"), nsFullName);
+            genOptions.addTrIfEmpty(std::string("__DESCRIPTION"), nsFullName);
 
             for ( FullQualifiedTypeNameMap<ClassInfo>::const_iterator cit = nsClassesMap.begin()
                 ; cit!=nsClassesMap.end()
@@ -2235,7 +2240,7 @@ ssq::sqstring generateClassDocs( const ClassInfo &ci, const EnumScriptGeneration
                     {
                         if (fi.memberField) // для простых полей отдельных страничек не генерим
                         {
-                            genOptions.addTr(fi.name, nsFullName);
+                            genOptions.addTrIfEmpty(fi.name, nsFullName);
                         }
                         else // Для функций будет отдельная страничка, там и brief и полное описание
                         {
@@ -2257,9 +2262,9 @@ ssq::sqstring generateClassDocs( const ClassInfo &ci, const EnumScriptGeneration
                     // {
                     //     auto clsName = clsInfo.name;
                     //     auto clsFullName = utils::appendType(nsFullName, clsName);
-                    //     genOptions.addTr("__BRIEF", clsFullName);
-                    //     genOptions.addTr("__DESCRIPTION", clsFullName);
-                    //     genOptions.addTr("__REMARKS", clsFullName);
+                    //     genOptions.addTrIfEmpty("__BRIEF", clsFullName);
+                    //     genOptions.addTrIfEmpty("__DESCRIPTION", clsFullName);
+                    //     genOptions.addTrIfEmpty("__REMARKS", clsFullName);
                     // }
 
                 }
@@ -2281,7 +2286,7 @@ ssq::sqstring generateClassDocs( const ClassInfo &ci, const EnumScriptGeneration
             if (genOptions.hasTr("__DESCRIPTION", nsFullName))
             {
                 appendLinefeed(); appendLinefeed();
-                res << genOptions.getTr("__DESCRIPTION", nsFullName);
+                res << genOptions.getTr("__DESCRIPTION", nsFullName) << "\n";
             }
 
             bool hasKlasse    = false;
