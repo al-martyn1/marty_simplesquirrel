@@ -1803,6 +1803,12 @@ ssq::sqstring generateFunctionDocs( const FunctionInfo &fi
         genOptions.addTrIfEmpty("__DESCRIPTION"   , functionFullName);
         genOptions.addTrIfEmpty("__RETURNS"       , functionFullName);
         genOptions.addTrIfEmpty("__REMARKS"       , functionFullName);
+        genOptions.addTrIfEmpty("__EXAMPLE"       , functionFullName);
+
+        for(const auto &param: fi.parameters)
+        {
+            genOptions.addTrIfEmpty(param.name, functionFullName);
+        }
 
     }
 
@@ -1881,10 +1887,32 @@ ssq::sqstring generateFunctionDocs( const FunctionInfo &fi
 
         }
 
+        // if (genOptions.hasTr("__REMARKS", functionFullName))
+        // {
+        //     res << genOptions.getTr("__REMARKS", functionFullName) << "\n\n";
+        // }
+        //  
         if (genOptions.hasTr("__REMARKS", functionFullName))
         {
-            res << genOptions.getTr("__REMARKS", functionFullName) << "\n\n";
+            appendLinefeed(); appendLinefeed();
+            res << genOptions.makeSubsectionHeaderMdString(genOptions.getTr("remarks-subsection-title", "_md-common"));
+            appendLinefeed();
+            res << marty_tr::tr(std::string("__REMARKS"), functionFullName, genOptions.mdLang);
+            appendLinefeed(); // res.append(1u,'\n');
+            //appendLinefeed(); appendLinefeed();
         }
+
+        if (genOptions.hasTr("__EXAMPLE", functionFullName))
+        {
+            appendLinefeed(); appendLinefeed();
+            res << genOptions.makeSubsectionHeaderMdString(genOptions.getTr("example-subsection-title", "_md-common"));
+            appendLinefeed();
+            res << marty_tr::tr(std::string("__EXAMPLE"), functionFullName, genOptions.mdLang);
+            appendLinefeed(); // res.append(1u,'\n');
+            //appendLinefeed(); appendLinefeed();
+        }
+
+
 
     }
 
