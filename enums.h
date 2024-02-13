@@ -72,5 +72,39 @@ MARTY_CPP_ENUM_CLASS_DESERIALIZE_BEGIN( ListingNestedTagsMode, std::map, 1 )
     MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ListingNestedTagsMode::empty     , "emptyline" );
 MARTY_CPP_ENUM_CLASS_DESERIALIZE_END( ListingNestedTagsMode, std::map, 1 )
 
+
+enum class ApiDefDirective : std::uint32_t
+{
+    invalid      = (std::uint32_t)(-1),
+    unknown      = (std::uint32_t)(-1),
+    _namespace   = 0x00,
+    members      = 0x01,
+    functions    = 0x02,
+    classes      = 0x03,
+    _class       = 0x04
+
+}; // enum class ApiDefDirective : std::uint32_t
+
+MARTY_CPP_MAKE_ENUM_IS_FLAGS_FOR_NON_FLAGS_ENUM(ApiDefDirective)
+
+MARTY_CPP_ENUM_CLASS_SERIALIZE_BEGIN( ApiDefDirective, std::map, 1 )
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ApiDefDirective::members      , "Members"   );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ApiDefDirective::invalid      , "Invalid"   );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ApiDefDirective::_namespace   , "Namespace" );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ApiDefDirective::_class       , "Class"     );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ApiDefDirective::functions    , "Functions" );
+    MARTY_CPP_ENUM_CLASS_SERIALIZE_ITEM( ApiDefDirective::classes      , "Classes"   );
+MARTY_CPP_ENUM_CLASS_SERIALIZE_END( ApiDefDirective, std::map, 1 )
+
+MARTY_CPP_ENUM_CLASS_DESERIALIZE_BEGIN( ApiDefDirective, std::map, 1 )
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ApiDefDirective::members      , "members"   );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ApiDefDirective::invalid      , "invalid"   );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ApiDefDirective::invalid      , "unknown"   );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ApiDefDirective::_namespace   , "namespace" );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ApiDefDirective::_class       , "class"     );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ApiDefDirective::functions    , "functions" );
+    MARTY_CPP_ENUM_CLASS_DESERIALIZE_ITEM( ApiDefDirective::classes      , "classes"   );
+MARTY_CPP_ENUM_CLASS_DESERIALIZE_END( ApiDefDirective, std::map, 1 )
+
 } // namespace marty_simplesquirrel
 

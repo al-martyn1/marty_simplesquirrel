@@ -1067,10 +1067,10 @@ struct FunctionInfo
         }
 
         isStatic = false;
-        if (umba::string_plus::starts_with(type, std::string("static ")))
+        if (umba::string_plus::starts_with_and_strip(type, std::string("static ")))
         {
             isStatic = true;
-            type.erase(0, 7);
+            //type.erase(0, 7);
             umba::string_plus::trim(type);
         }
     }
@@ -1289,6 +1289,11 @@ struct ClassInfo
     ClassInfo(const std::string &n) : name(n) {}
     ClassInfo(const std::string &n, bool isNs) : ns(isNs), name(n) {}
     ClassInfo(bool isNs) : ns(isNs), name() {}
+
+    bool empty() const
+    {
+        return name.empty() && functions.empty() && classes.empty();
+    }
 
     void addFunc(const FunctionInfo &fi)
     {

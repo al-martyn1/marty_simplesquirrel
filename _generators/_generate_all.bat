@@ -30,10 +30,14 @@
 @set LSTNESTEDTAGSMODE_GEN_FLAGS=--enum-flags=0 --enum-flags=type-decl,serialize,deserialize,lowercase,enum-class,fmt-hex %VALUES_CAMEL% %SERIALIZE_PASCAL%
 @set LSTNESTEDTAGSMODE_DEF=invalid,unknown=-1;keep;remove;empty,emptyLine
 
+@set APIDEFDIRECTIVE_GEN_FLAGS=--enum-flags=0 --enum-flags=type-decl,serialize,deserialize,lowercase,enum-class,fmt-hex %VALUES_CAMEL% %SERIALIZE_PASCAL%
+@set APIDEFDIRECTIVE_DEF=invalid,unknown=-1;namespace=0;members;functions;classes;class
 
 
 umba-enum-gen %GEN_OPTS% %HEX2% %TPL_OVERRIDE% ^
 %ENUMSCRIPTGENERATIONTYPE_GEN_FLAGS%           %UINT32% -E=EnumScriptGenerationType          -F=%ENUMSCRIPTGENERATIONTYPE_DEF%    ^
-%LSTNESTEDTAGSMODE_GEN_FLAGS%          %UINT32% -E=ListingNestedTagsMode            -F=%LSTNESTEDTAGSMODE_DEF%     ^
+%LSTNESTEDTAGSMODE_GEN_FLAGS%                  %UINT32% -E=ListingNestedTagsMode             -F=%LSTNESTEDTAGSMODE_DEF%           ^
+%APIDEFDIRECTIVE_GEN_FLAGS%                    %UINT32% -E=ApiDefDirective                   -F=%APIDEFDIRECTIVE_DEF%             ^
 ..\enums.h
+
 
